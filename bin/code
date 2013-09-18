@@ -20,32 +20,29 @@ version Code::VERSION
 desc 'Describe some switch here'
 switch [:s,:switch]
 
-desc 'Describe start here'
-arg_name 'Start a new feature'
+desc 'Create a new feature branch'
+arg_name 'The name of the feature'
 command :start do |c|
   c.action do |global_options, options, (feature_name)|
     $git.start feature_name
   end
 end
 
-desc 'Describe publish here'
-arg_name 'Describe arguments to publish here'
+desc 'Upload your feature branch to GitHub'
 command :publish do |c|
   c.action do |global_options, options, args|
     $git.publish
   end
 end
 
-desc 'Describe finish here'
-arg_name 'Describe arguments to finish here'
+desc 'Cleanup after a feature has been merged through GitHub'
 command :finish do |c|
   c.action do |global_options, options, args|
     $git.finish
   end
 end
 
-desc 'Describe cancel here'
-arg_name 'Describe arguments to cancel here'
+desc 'Delete the branch you are working on switch back to development'
 command :cancel do |c|
   c.action do |global_options, options, args|
     $git.cancel
