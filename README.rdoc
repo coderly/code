@@ -1,0 +1,6 @@
+= code
+
+Describe your project here
+
+:include:code.rdoc
+
