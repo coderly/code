@@ -14,6 +14,23 @@ module Code
       checkout feature
     end
 
+    def switch(*patterns)
+      branch = branch_matching *patterns
+      checkout branch
+    end
+
+    def branch_matching(*patterns)
+      branches.find { |b| branch_matches? b, *patterns } or abort "No branch matching #{patterns.join ' '} exists"
+    end
+
+    def branch_matches?(branch, *patterns)
+      patterns.all? { |p| branch.include? p }
+    end
+
+    def branches
+      `git branch`.strip.lines.map { |line| line.gsub(/\s|\*/, '') }
+    end
+
     def cancel
       if on_main_branch?
         puts "Nothing to cancel (already on #{main_branch})"

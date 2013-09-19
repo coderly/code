@@ -1,4 +1,7 @@
 #!/usr/bin/env ruby
+
+$: << File.join(File.dirname(__FILE__), '..', 'lib') # while this is still in development
+
 require 'gli'
 begin # XXX: Remove this begin/rescue before distributing your app
 require 'code'
@@ -35,6 +38,13 @@ command :publish do |c|
   end
 end
 
+desc "Push your current branch"
+command :push do |c|
+  c.action do |global_options, options, args|
+    $git.push $git.current_branch
+  end
+end
+
 desc 'Cleanup after a feature has been merged through GitHub'
 command :finish do |c|
   c.action do |global_options, options, args|
@@ -42,10 +52,16 @@ command :finish do |c|
   end
 end
 
-desc 'Delete the branch you are working on switch back to development'
+desc 'Delete the branch you are working on and switch back to development'
 command :cancel do |c|
   c.action do |global_options, options, args|
     $git.cancel
+  end
+end
+
+command :switch do |c|
+  c.action do |global_options, options, args|
+    $git.switch(*args)
   end
 end
 
