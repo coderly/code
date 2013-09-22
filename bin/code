@@ -34,7 +34,8 @@ end
 desc 'Upload your feature branch to GitHub'
 command :publish do |c|
   c.action do |global_options, options, args|
-    $git.publish
+    message = args.join(' ')
+    $git.publish message
   end
 end
 

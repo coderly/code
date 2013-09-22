@@ -26,4 +26,5 @@ spec = Gem::Specification.new do |s|
   s.add_development_dependency('rdoc')
   s.add_development_dependency('aruba')
   s.add_runtime_dependency('gli','2.8.0')
+  s.add_runtime_dependency('hub')
 end

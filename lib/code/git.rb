@@ -1,3 +1,5 @@
+require 'uri'
+
 module Code
 
   class Git
@@ -41,10 +43,16 @@ module Code
       end
     end
 
-    def publish
+    def publish(message = '')
       ensure_clean_slate!
       push current_branch
-      compare_in_browser current_branch
+      open_in_browser pull_request(message)
+    end
+
+    def pull_request(message = '')
+      message = current_branch if message.empty?
+      command = "hub pull-request -f \"#{message}\" -b #{main_repo}:development -h #{main_repo}:#{current_branch}"
+      exec(command).strip
     end
 
     def compare_in_browser(branch)
@@ -89,12 +97,28 @@ module Code
       call "branch #{flag} #{branch}"
     end
 
+    def delete_remote_branch(branch)
+      call "push origin :#{branch}"
+    end
+
     def current_branch
       `git symbolic-ref HEAD --short`.strip
     end
 
     def main_branch
       'development'
+    end
+
+    def main_repo
+      main_repo_url[/:(\w+)\//,1]
+    end
+
+    def main_repo_url
+      repo_url 'origin'
+    end
+
+    def repo_url(name)
+      `git ls-remote --get-url #{name}`.strip
     end
 
     def on_main_branch?
@@ -154,9 +178,17 @@ module Code
       abort red(message)
     end
 
+    def open_in_browser(url)
+      open url if url =~ URI::regexp
+    end
+
+    def open(item)
+      `open #{item}`
+    end
+
     def exec(script)
       puts green(script)
-      system script
+      %x[#{script}]
     end
 
   end
