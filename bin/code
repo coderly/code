@@ -26,7 +26,8 @@ switch [:s,:switch]
 desc 'Create a new feature branch'
 arg_name 'The name of the feature'
 command :start do |c|
-  c.action do |global_options, options, (feature_name)|
+  c.action do |global_options, options, args|
+    feature_name = args.join('-')
     $git.start feature_name
   end
 end
