@@ -3,7 +3,7 @@ Code: The Coderly Toolbelt
 
 code is a command line tool that automates the Coderly workflow.
 
-hub is best aliased as `c`, so you can type `$ c <command>` in the shell.
+code is best aliased as `c`, so you can type `$ c <command>` in the shell.
 
 
 Installation
@@ -21,9 +21,9 @@ $ cd code
 $ bundle install
 ~~~
 
-Add the bin directory to the load paths by opening your `.bash_profile` and ensuring you havethe following
+Add the bin directory to the load paths by opening your `.bash_profile` and ensuring you have the following
 ~~~ sh
-PATH=$PATH:$HOME/path-to-git-repo/code/bin
+PATH=$PATH:$HOME/path-you-cloned-code-to/code/bin
 export PATH #Add this if it doesn't already exist
 ~~~
 
