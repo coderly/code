@@ -50,7 +50,7 @@ module Code
     end
 
     def pull_request(message = '')
-      message = current_branch if message.empty?
+      message = current_branch isdf message.empty?
       command = "hub pull-request -f \"#{message}\" -b #{main_repo}:development -h #{main_repo}:#{current_branch}"
       exec(command).strip
     end
@@ -102,7 +102,7 @@ module Code
     end
 
     def current_branch
-      `git symbolic-ref HEAD --short`.strip
+      `git symbolic-ref HEAD`.strip.split('/')[-1]
     end
 
     def main_branch
