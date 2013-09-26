@@ -23,7 +23,7 @@ $ bundle install
 
 Add the bin directory to the load paths by opening your `.bash_profile` and ensure you have the following
 ~~~ sh
-PATH=$PATH:$HOME/path-to-git-repo/code/bin
+PATH=$PATH:$HOME/path-you-cloned-code-to/code/bin
 export PATH #Add this if it doesn't already exist
 ~~~
 
@@ -49,7 +49,7 @@ Your pull request will be opened up in the browser
 4. When someone gives you a :thumbsup: you can merge it from the pull request page. 
     * Make sure that the tests are passing.
     * If the code can't be automatically merged, merge development onto your branch and resolve the conflicts.
-5. After the code has been merged get back to development and delete your branch
+5. After the code has been merged type the following command which deletes your feature branch and updates your development branch
 ~~~ sh
 $ code finish
 ~~~
