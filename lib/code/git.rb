@@ -9,8 +9,8 @@ module Code
     def start(feature)
       ensure_feature_missing! feature
 
-      pull main_branch
       checkout main_branch unless on_main_branch?
+      pull main_branch
 
       create_branch feature
       checkout feature
@@ -50,7 +50,7 @@ module Code
     end
 
     def pull_request(message = '')
-      message = current_branch isdf message.empty?
+      message = current_branch if message.empty?
       command = "hub pull-request -f \"#{message}\" -b #{main_repo}:development -h #{main_repo}:#{current_branch}"
       exec(command).strip
     end
