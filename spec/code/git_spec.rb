@@ -37,7 +37,18 @@ module Code
           Branch.all.count.should eq 2
         end
 
+        context 'when checking out a branch' do
+          before do
+            Branch.matching('test_branch').checkout
+          end
+
+          it 'should have changed the branch' do
+            Branch.current.name.should eq 'test_branch'
+          end
+        end
+
       end
+
     end
 
   end
