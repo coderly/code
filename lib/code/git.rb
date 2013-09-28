@@ -49,7 +49,6 @@ module Code
     end
 
     def push(branch_name)
-
       current_branch.push
     end
 

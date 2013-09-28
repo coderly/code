@@ -1,15 +1,5 @@
 module Code
 
-  def self.Branch(branch_or_branch_name)
-    if branch_or_branch_name.is_a?(Branch)
-      Branch
-    elsif branch_or_branch_name.is_a?(String)
-      Branch.matching(branch_or_branch_name)
-    else
-      raise "Unable to get a branch from #{branch_or_branch_name}"
-    end
-  end
-
   class Branch
 
     ProtectedBranchError = Class.new(StandardError)
