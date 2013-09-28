@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/coderly/code.png)](https://travis-ci.org/coderly/code)
+[![Code Climate](https://codeclimate.com/repos/5247675a89af7e537504d86d/badges/ed3e86a8e88092669654/gpa.png)](https://codeclimate.com/repos/5247675a89af7e537504d86d/feed)
+
 Code: The Coderly Toolbelt
 ==================
 
