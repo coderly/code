@@ -41,6 +41,11 @@ module Code
       System.open_in_browser pull_request(message)
     end
 
+    def push(branch_name)
+
+      current_branch.push
+    end
+
     def pull_request(message = '')
       message = current_branch if message.empty?
       command = "hub pull-request -f \"#{message}\" -b #{main_repo}:development -h #{main_repo}:#{current_branch}"
@@ -62,8 +67,7 @@ module Code
     end
 
     def files_changed?
-      diff = `git diff --name-status`.strip
-      diff != ''
+      System.result('git diff --name-status') != ''
     end
 
     def checkout(branch)
@@ -91,7 +95,7 @@ module Code
     end
 
     def repo_url(name)
-      `git ls-remote --get-url #{name}`.strip
+      System.result("git ls-remote --get-url #{name}")
     end
 
     def ensure_safe_branch!(branch)

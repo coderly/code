@@ -1,11 +1,22 @@
 module Code
+
+  def self.Branch(branch_or_branch_name)
+    if branch_or_branch_name.is_a?(Branch)
+      Branch
+    elsif branch_or_branch_name.is_a?(String)
+      Branch.matching(branch_or_branch_name)
+    else
+      raise "Unable to get a branch from #{branch_or_branch_name}"
+    end
+  end
+
   class Branch
 
     DEVELOPMENT_BRANCH_NAME = 'development'
     PROTECTED_BRANCH_NAMES = %w{master development}
 
     def self.all_names
-      `git branch`.strip.lines.map { |line| line.gsub(/\s|\*/, '') }
+      System.result('git branch').strip.lines.map { |line| line.gsub(/\s|\*/, '') }
     end
 
     def self.all
@@ -17,7 +28,7 @@ module Code
     end
 
     def self.current
-      name = `git symbolic-ref HEAD`.strip.split('/')[-1]
+      name = System.result('git symbolic-ref HEAD').split('/')[-1]
       new(name)
     end
 
@@ -47,8 +58,7 @@ module Code
     end
 
     def exists?(branch)
-      ref = `git show-ref refs/heads/#{branch}`.strip
-      ref != ''
+      System.result("git show-ref refs/heads/#{branch}") != ''
     end
 
     def development?

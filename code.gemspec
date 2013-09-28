@@ -17,14 +17,13 @@ spec = Gem::Specification.new do |s|
   )
 
   s.require_paths << 'lib'
-  s.has_rdoc = true
-  s.extra_rdoc_files = ['README.rdoc','code.rdoc']
-  s.rdoc_options << '--title' << 'code' << '--main' << 'README.rdoc' << '-ri'
   s.bindir = 'bin'
   s.executables << 'code'
   s.add_development_dependency('rake')
   s.add_development_dependency('rdoc')
   s.add_development_dependency('aruba')
+  s.add_development_dependency('rspec')
+
   s.add_runtime_dependency('gli','2.8.0')
   s.add_runtime_dependency('hub')
 end

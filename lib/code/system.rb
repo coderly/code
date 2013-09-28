@@ -21,8 +21,16 @@ module Code
       %x[#{script}]
     end
 
+    def puts(text)
+      Kernel.puts text
+    end
+
     def call(params)
       exec "git #{params}"
+    end
+
+    def result(script)
+      `#{script}`.strip
     end
 
     def color(script, color)
