@@ -7,12 +7,16 @@ module Code
 
   class Git
 
+    NotOnFeatureBranchError = Class.new(StandardError)
+    UncommittedChangesError = Class.new(StandardError)
+    FeatureExistsError = Class.new(StandardError)
+
     def path
       Dir.pwd
     end
 
     def start(feature)
-      ensure_feature_missing! feature
+      raise FeatureExistsError, "Feature #{feature} already exists" if Branch.exists?(feature)
 
       development_branch.checkout unless current_branch.main?
       development_branch.pull
@@ -36,9 +40,8 @@ module Code
     end
 
     def publish(message = '')
-      abort 'Must be on a feature branch to publish your code' unless current_branch.feature?
-
-      ensure_clean_slate!
+      raise NotOnFeatureBranchError, 'Must be on a feature branch to publish your code' unless current_branch.feature?
+      raise UncommittedChangesError, 'You have uncommitted changes' if uncommitted_changes?
 
       current_branch.push
 
@@ -67,15 +70,15 @@ module Code
       fetch
       main_branch.pull
 
-      delete_branch branch
+      branch.delete
     end
 
-    def files_changed?
+    def uncommitted_changes?
       System.result('git diff --name-status') != ''
     end
 
-    def checkout(branch)
-      System.call "checkout #{branch}"
+    def checkout(branch_name)
+      Branch.matching(branch_name).checkout
     end
 
     def fetch
@@ -100,20 +103,6 @@ module Code
 
     def repo_url(name)
       System.result("git ls-remote --get-url #{name}")
-    end
-
-    def ensure_safe_branch!(branch)
-      error "branch #{branch} is protected" if protected_branch? branch
-    end
-
-    def ensure_feature_missing!(feature)
-      error "The #{feature} feature already exists" if feature_exists?(feature)
-    end
-
-    def ensure_clean_slate!
-      if files_changed?
-        error 'Please stash or commit your code'
-      end
     end
 
   end

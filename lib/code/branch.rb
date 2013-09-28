@@ -12,6 +12,8 @@ module Code
 
   class Branch
 
+    ProtectedBranchError = Class.new(StandardError)
+
     DEVELOPMENT_BRANCH_NAME = 'development'
     PROTECTED_BRANCH_NAMES = %w{master development}
 
@@ -25,6 +27,10 @@ module Code
 
     def self.matching(*patterns)
       all.find { |b| b.matches? *patterns }
+    end
+
+    def self.exists?(branch_name)
+      new(branch_name).exists?
     end
 
     def self.current
@@ -99,7 +105,7 @@ module Code
     end
 
     def authorize_delete!(branch)
-      System.error "branch #{branch} is protected" if protected?
+      raise ProtectedBranchError "branch #{branch} is protected" if protected?
     end
 
     attr_reader :name
