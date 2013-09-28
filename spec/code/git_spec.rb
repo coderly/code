@@ -1,4 +1,5 @@
 require 'code/git'
+require 'code/branch'
 require 'code/system'
 
 require_relative '../support/git_extras'
@@ -17,9 +18,7 @@ module Code
 
     before do
       System.stub(:puts)
-
       Git.setup_test_repo
-      git.init
     end
 
     describe 'current_branch' do
@@ -27,6 +26,18 @@ module Code
       subject { branch }
 
       its(:name) { should eq 'master' }
+
+      context 'when creating a new branch' do
+
+        before do
+          Branch.create 'test_branch'
+        end
+
+        it 'should have the right branches' do
+          Branch.all.count.should eq 2
+        end
+
+      end
     end
 
   end

@@ -30,6 +30,8 @@ module Code
     end
 
     def result(script)
+      puts "running script `#{script}`"
+      puts "result = " +       `#{script}`.strip
       `#{script}`.strip
     end
 
