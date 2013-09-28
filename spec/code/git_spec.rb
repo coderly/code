@@ -1,6 +1,8 @@
 require 'code/git'
 require 'code/system'
 
+require_relative '../support/git_extras'
+
 require 'tmpdir'
 
 module Code
@@ -9,12 +11,15 @@ module Code
     let(:git) { Git.new }
     let(:repo_path) { @repo_path }
 
+    before(:all) do
+      Git.send :include, GitExtras
+    end
+
     before do
       System.stub(:puts)
 
-      @repo_path = Dir.mktmpdir
-      Dir.chdir repo_path
-      System.exec 'git init'
+      Git.setup_test_repo
+      git.init
     end
 
     describe 'current_branch' do

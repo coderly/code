@@ -7,6 +7,10 @@ module Code
 
   class Git
 
+    def path
+      Dir.pwd
+    end
+
     def start(feature)
       ensure_feature_missing! feature
 
