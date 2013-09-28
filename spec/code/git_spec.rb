@@ -37,6 +37,16 @@ module Code
           Branch.all.count.should eq 2
         end
 
+        context 'when deleting a branch' do
+          before do
+            Branch.matching('test_branch').delete!
+          end
+
+          it 'should only have one branch left' do
+            Branch.all.count.should eq 1
+          end
+        end
+
         context 'when checking out a branch' do
           before do
             Branch.matching('test_branch').checkout
@@ -45,6 +55,18 @@ module Code
           it 'should have changed the branch' do
             Branch.current.name.should eq 'test_branch'
           end
+        end
+
+      end
+
+      context 'when trying to delete a protected branch' do
+
+        before do
+          Branch.create 'development'
+        end
+
+        it 'should now be allowed' do
+          expect { Branch.matching('development').delete! }.to raise_error Branch::ProtectedBranchError
         end
 
       end

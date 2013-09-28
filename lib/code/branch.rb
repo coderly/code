@@ -104,8 +104,8 @@ module Code
       System.call "checkout #{name}"
     end
 
-    def authorize_delete!(branch)
-      raise ProtectedBranchError "branch #{branch} is protected" if protected?
+    def authorize_delete!
+      raise ProtectedBranchError, "The #{name} branch is protected" if protected?
     end
 
     attr_reader :name
