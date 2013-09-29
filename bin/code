@@ -41,9 +41,9 @@ command :publish do |c|
 end
 
 desc "Push your current branch"
-command :push do |c|
+command :push, :p do |c|
   c.action do |global_options, options, branch_name|
-    $git.push(branch_name)
+    $git.push
   end
 end
 
@@ -61,7 +61,7 @@ command :cancel do |c|
   end
 end
 
-command :switch do |c|
+command :switch, :s do |c|
   c.action do |global_options, options, args|
     $git.switch(*args)
   end

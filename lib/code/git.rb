@@ -18,7 +18,7 @@ module Code
     def start(feature)
       raise FeatureExistsError, "Feature #{feature} already exists" if Branch.exists?(feature)
 
-      development_branch.checkout unless current_branch.main?
+      development_branch.checkout unless current_branch.development?
       development_branch.pull
 
       create_branch feature
@@ -30,11 +30,11 @@ module Code
     end
 
     def cancel
-      if current_branch.main?
-        puts "Nothing to cancel (already on #{main_branch})"
+      if current_branch.development?
+        puts "Nothing to cancel (already on #{development_branch})"
       else
         previous_branch = current_branch
-        checkout main_branch
+        checkout development_branch
         previous_branch.delete!(force: true)
       end
     end
@@ -48,7 +48,7 @@ module Code
       System.open_in_browser pull_request(message)
     end
 
-    def push(branch_name)
+    def push
       current_branch.push
     end
 
@@ -65,9 +65,9 @@ module Code
     def finish
       branch = current_branch
 
-      main_branch.checkout
+      development_branch.checkout
       fetch
-      main_branch.pull
+      development_branch.pull
 
       branch.delete
     end

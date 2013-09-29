@@ -15,7 +15,12 @@ module Code
       all_names.map { |name| new(name) }
     end
 
+    def self.coerce_patterns(*patterns)
+      patterns.flatten.join(' ').split(' ')
+    end
+
     def self.matching(*patterns)
+      patterns = coerce_patterns(patterns)
       all.find { |b| b.matches? *patterns }
     end
 
