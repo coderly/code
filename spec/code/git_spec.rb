@@ -37,6 +37,10 @@ module Code
           Branch.all.count.should eq 2
         end
 
+        it 'should have created the branch' do
+          Branch.new('test_branch').should exist
+        end
+
         context 'when deleting a branch' do
           before do
             Branch.matching('test_branch').delete!
@@ -44,6 +48,10 @@ module Code
 
           it 'should only have one branch left' do
             Branch.all.count.should eq 1
+          end
+
+          it 'should have deleted the branch' do
+            Branch.new('test_branch').should_not exist
           end
         end
 

@@ -58,8 +58,8 @@ module Code
       patterns.all? { |p| name.downcase.include? p.downcase }
     end
 
-    def exists?(branch)
-      System.result("git show-ref refs/heads/#{branch}") != ''
+    def exists?
+      System.result("git show-ref refs/heads/#{name}") != ''
     end
 
     def development?
@@ -91,8 +91,8 @@ module Code
       System.call "push origin #{name}"
     end
 
-    def pull(branch)
-      System.call "pull origin #{branch}"
+    def pull
+      System.call "pull origin #{name}"
     end
 
     def checkout
@@ -101,6 +101,10 @@ module Code
 
     def authorize_delete!
       raise ProtectedBranchError, "The #{name} branch is protected" if protected?
+    end
+
+    def message
+      name.gsub('-', ' ').capitalize
     end
 
     attr_reader :name

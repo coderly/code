@@ -21,8 +21,7 @@ module Code
       development_branch.checkout unless current_branch.development?
       development_branch.pull
 
-      create_branch feature
-      checkout feature
+      Branch.create(feature).checkout
     end
 
     def switch(*patterns)
@@ -53,7 +52,7 @@ module Code
     end
 
     def pull_request(message = '')
-      message = current_branch if message.empty?
+      message = current_branch.message if message.empty?
       command = "hub pull-request -f \"#{message}\" -b #{main_repo}:development -h #{main_repo}:#{current_branch}"
       System.exec(command).strip
     end
