@@ -2,7 +2,14 @@ module Code
   module System
     extend self
 
+    CommandFailedError = ::Class.new(StandardError)
+
     COLORS = {black: 30, red: 31, green: 32, yellow: 33, blue: 34, magenta: 35, teal: 36}
+
+    def prompt(*args)
+      print(*args)
+      gets
+    end
 
     def error(message)
       abort red(message)
@@ -19,6 +26,11 @@ module Code
     def exec(script)
       puts green(script)
       %x[#{script}]
+      raise CommandFailedError, red("command failed: #{script}") if command_failed?
+    end
+
+    def command_failed?
+      not $?.success?
     end
 
     def puts(text)
@@ -43,7 +55,7 @@ module Code
     end
 
     def red(script)
-      color script, :magenta
+      color script, :red
     end
 
   end

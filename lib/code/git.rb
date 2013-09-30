@@ -18,10 +18,36 @@ module Code
     def start(feature)
       raise FeatureExistsError, "Feature #{feature} already exists" if Branch.exists?(feature)
 
-      development_branch.checkout unless current_branch.development?
-      development_branch.pull
+      with_stash do
+        development_branch.checkout unless current_branch.development?
+        development_branch.pull
 
-      Branch.create(feature).checkout
+        Branch.create(feature).checkout
+      end
+    end
+
+    def stash
+      System.call('stash')
+    end
+
+    def unstash
+      System.call('stash pop')
+    end
+
+    def with_stash
+      if uncommitted_changes?
+        stash
+        yield
+        unstash
+      else
+        yield
+      end
+    end
+
+    def hotfix(name)
+      start name
+      commit name if uncommitted_changes?
+      publish name
     end
 
     def switch(*patterns)
@@ -36,6 +62,11 @@ module Code
         checkout development_branch
         previous_branch.delete!(force: true)
       end
+    end
+
+    def commit(message)
+      System.call 'add -A'
+      System.call "commit -m \"#{message}\""
     end
 
     def publish(message = '')
@@ -68,11 +99,11 @@ module Code
       fetch
       development_branch.pull
 
-      branch.delete
+      branch.delete!
     end
 
     def uncommitted_changes?
-      System.result('git diff --name-status') != ''
+      System.result('git status --porcelain') != ''
     end
 
     def checkout(branch_name)
