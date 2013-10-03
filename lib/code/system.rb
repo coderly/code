@@ -25,8 +25,9 @@ module Code
 
     def exec(script)
       puts green(script)
-      %x[#{script}]
+      result = %x[#{script}]
       raise CommandFailedError, red("command failed: #{script}") if command_failed?
+      result
     end
 
     def command_failed?

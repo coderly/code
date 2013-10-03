@@ -13,6 +13,8 @@ rescue LoadError
 end
 
 require 'code/git'
+require 'code/file_list'
+require 'code/system'
 
 include GLI::App
 
@@ -47,6 +49,7 @@ command :push, :p do |c|
   end
 end
 
+desc "Quickly create a pull request from your changes on development."
 command :hotfix, :fix do |c|
   c.action do |global_options, options, args|
     hotfix_name = args.join('-')
@@ -68,9 +71,24 @@ command :cancel do |c|
   end
 end
 
+desc 'Switch to a branch. You can use sub-commands.'
 command :switch, :s do |c|
   c.action do |global_options, options, args|
     $git.switch(*args)
+  end
+end
+
+desc 'List all the files in the current directory with the patterns'
+command :files do |c|
+  c.action do |global_options, options, patterns|
+    puts FileList.new.matching(patterns)
+  end
+end
+
+command :test do |c|
+  c.action do |global_options, options, patterns|
+    files_to_test = FileList.new('./spec').matching(*patterns, '.rb')
+    Code::System.exec("zeus test #{files_to_test.join ' '}")
   end
 end
 
