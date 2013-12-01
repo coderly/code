@@ -20,11 +20,12 @@ Dependencies:
 
 Install hub, for example on OSX:
 ~~~ sh
+$ brew install hub
 ~~~
 
 Run hub once in an active git directory to add your credentials
 ~~~ sh
-hub fetch
+$ hub fetch
 ~~~
 
 Clone the repository to a directory of your choice and run bundle install
@@ -64,7 +65,6 @@ Your pull request will be opened up in the browser
     * If the code can't be automatically merged, merge development onto your branch and resolve the conflicts.
 
 5. After the code has been merged type the following command which deletes your feature branch and updates your development branch
-
 ```sh
 $ code finish
 ```
