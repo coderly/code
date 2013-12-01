@@ -16,6 +16,16 @@ Dependencies:
 
 * **git 1.7.3** or newer
 * **Ruby 2.0** or newer
+* **[hub](https://github.com/github/hub)**
+
+Install hub, for example on OSX:
+~~~ sh
+~~~
+
+Run hub once in an active git directory to add your credentials
+~~~ sh
+hub fetch
+~~~
 
 Clone the repository to a directory of your choice and run bundle install
 ~~~ sh
@@ -52,7 +62,9 @@ Your pull request will be opened up in the browser
 4. When someone gives you a :thumbsup: you can merge it from the pull request page. 
     * Make sure that the tests are passing.
     * If the code can't be automatically merged, merge development onto your branch and resolve the conflicts.
+
 5. After the code has been merged type the following command which deletes your feature branch and updates your development branch
-~~~ sh
+
+```sh
 $ code finish
-~~~
+```
