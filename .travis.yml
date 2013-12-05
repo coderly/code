@@ -1,4 +1,3 @@
 language: ruby
-script: "bundle exec rake --trace"
 rvm:
   - 2.0.0

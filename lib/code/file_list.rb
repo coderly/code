@@ -1,5 +1,9 @@
+require 'code/match_scorer/adaptive'
+
 class FileList
   include Enumerable
+
+  MATCHING = lambda { |o| o > 0 }
 
   def initialize(base_path = '.')
     @base_path = base_path
@@ -10,18 +14,12 @@ class FileList
   end
 
   def matching(*patterns)
-    patterns = coerce_patterns(*patterns)
-    select { |path|
-      patterns.all? { |pattern| path.downcase.include? pattern.downcase }
-    }
+    scorer = MatchScorer::Adaptive.new(*patterns)
+    select { |p| scorer.score(p) > 0 }.sort { |a, b| scorer.score(a) <=> scorer.score(b) }
   end
 
   private
 
   attr_reader :base_path
-
-  def coerce_patterns(*patterns)
-    Array(patterns).join(' ').split(' ')
-  end
 
 end
