@@ -3,6 +3,7 @@ module Code
   class Branch
 
     ProtectedBranchError = Class.new(StandardError)
+    PrivateBranchError = Class.new(StandardError)
 
     DEVELOPMENT_BRANCH_NAME = 'development'
     PROTECTED_BRANCH_NAMES = %w{master development}
@@ -88,6 +89,7 @@ module Code
     end
 
     def push
+      ensure_public!
       System.call "push origin #{name}"
     end
 
@@ -105,6 +107,14 @@ module Code
 
     def message
       name.gsub('-', ' ').capitalize
+    end
+
+    def private?
+      !! name.match(/-local$/)
+    end
+
+    def ensure_public!
+      raise PrivateBranchError, "#{name} is a private branch" if private?
     end
 
     attr_reader :name
