@@ -17,15 +17,18 @@ module Code
     end
 
     before do
-      System.stub(:puts)
+      allow(System).to receive(:puts)
       Git.setup_test_repo
     end
 
     describe 'current_branch' do
       let(:branch) { git.current_branch }
+
       subject { branch }
 
-      its(:name) { should eq 'master' }
+      it 'should currently be on the master branch' do
+        expect(branch.name).to eq 'master'
+      end
 
       context 'when creating a new branch' do
 
@@ -34,11 +37,11 @@ module Code
         end
 
         it 'should have the right branches' do
-          Branch.all.count.should eq 2
+          expect(Branch.all.count).to eq 2
         end
 
         it 'should have created the branch' do
-          Branch.new('test_branch').should exist
+          expect(Branch.new('test_branch')).to exist
         end
 
         context 'when deleting a branch' do
@@ -47,11 +50,11 @@ module Code
           end
 
           it 'should only have one branch left' do
-            Branch.all.count.should eq 1
+            expect(Branch.all.count).to eq 1
           end
 
           it 'should have deleted the branch' do
-            Branch.new('test_branch').should_not exist
+            expect(Branch.new('test_branch')).to_not exist
           end
         end
 
@@ -61,7 +64,7 @@ module Code
           end
 
           it 'should have changed the branch' do
-            Branch.current.name.should eq 'test_branch'
+            expect(Branch.current.name).to eq 'test_branch'
           end
         end
 
