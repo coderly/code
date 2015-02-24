@@ -29,6 +29,14 @@ module Code
       new(branch_name).exists?
     end
 
+    def self.merged
+      clean_branch = lambda { |o| o.gsub('*', '').strip }
+      lines = System.result('git branch --merged development')
+      branch_names = lines.split("\n").map(&clean_branch)
+      branch_names = branch_names - ['development', 'master']
+      branch_names.map { |name| new(name) }
+    end
+
     def self.current
       name = System.result('git symbolic-ref HEAD').split('/')[-1]
       new(name)

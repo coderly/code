@@ -123,6 +123,10 @@ module Code
       Branch.development
     end
 
+    def prune_remote_branches
+      System.call 'remote prune origin'
+    end
+
     def main_repo
       main_repo_url[/:(\w+)\//,1]
     end

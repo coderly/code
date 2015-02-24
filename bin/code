@@ -13,6 +13,7 @@ rescue LoadError
 end
 
 require 'code/git'
+require 'code/branch'
 require 'code/file_list'
 require 'code/system'
 
@@ -91,10 +92,25 @@ command :files do |c|
   end
 end
 
-command :test do |c|
+desc 'Clean up by deleting old branches'
+command :clean do |c|
   c.action do |global_options, options, patterns|
-    files_to_test = FileList.new('./spec').matching(*patterns, '.rb').join ' '
-    puts "zeus test spec #{files_to_test}"
+    puts "Deleting local merged branches..."
+    Code::Branch.merged.each do |branch|
+      branch.delete!
+    end
+    puts "Done!"
+
+    puts "Pruning remote branches that don't exist anymore..."
+    $git.prune_remote_branches
+    puts "Done!"
+  end
+end
+
+desc 'List the merged branches'
+command :merged do |c|
+  c.action do |global_options, options, patterns|
+    puts Code::Branch.merged
   end
 end
 
