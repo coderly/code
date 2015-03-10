@@ -16,7 +16,7 @@ module Code
     end
 
     def start(feature)
-      raise FeatureExistsError, "Feature #{feature} already exists" if Branch.exists?(feature)
+      raise FeatureExistsError, "Branch #{feature} already exists" if Branch.exists?(feature)
 
       with_stash do
         development_branch.checkout unless current_branch.development?
@@ -45,9 +45,18 @@ module Code
     end
 
     def hotfix(name)
-      start name
+      raise FeatureExistsError, "Hotfix #{name} already exists" if Branch.exists?(name)
+
+      branch = with_stash do
+        master_branch.checkout unless current_branch.master?
+        master_branch.pull
+
+        Branch.create(name).checkout
+      end
+
       commit name if uncommitted_changes?
-      publish name
+
+      publish(branch: branch, base: Branch.master)
     end
 
     def switch(*patterns)
@@ -69,23 +78,22 @@ module Code
       System.call "commit -m \"#{message}\""
     end
 
-    def publish(message = '')
+    def publish(branch:, base:, message: '')
       raise NotOnFeatureBranchError, 'Must be on a feature branch to publish your code' unless current_branch.feature?
       raise UncommittedChangesError, 'You have uncommitted changes' if uncommitted_changes?
 
-      current_branch.push
+      branch.push
 
-      System.open_in_browser pull_request(message)
+      System.open_in_browser pull_request(branch: branch, base: base, message: message)
     end
 
     def push
-
       current_branch.push
     end
 
-    def pull_request(message = '')
-      message = current_branch.message if message.empty?
-      command = "hub pull-request -f \"#{message}\" -b #{main_repo}:development -h #{main_repo}:#{current_branch}"
+    def pull_request(branch:, base:, message: '')
+      message = branch.message if message.empty?
+      command = "hub pull-request -f \"#{message}\" -b #{main_repo}:#{base} -h #{main_repo}:#{branch}"
       System.exec(command).strip
     end
 
@@ -121,6 +129,10 @@ module Code
 
     def development_branch
       Branch.development
+    end
+
+    def master_branch
+      Branch.master
     end
 
     def prune_remote_branches
