@@ -5,6 +5,7 @@ module Code
     ProtectedBranchError = Class.new(StandardError)
     PrivateBranchError = Class.new(StandardError)
 
+    MASTER_BRANCH_NAME = 'master'
     DEVELOPMENT_BRANCH_NAME = 'development'
     PROTECTED_BRANCH_NAMES = %w{master development}
 
@@ -46,6 +47,10 @@ module Code
       new DEVELOPMENT_BRANCH_NAME
     end
 
+    def self.master
+      new MASTER_BRANCH_NAME
+    end
+
     def self.create(branch_name)
       System.call "branch #{branch_name}"
       Branch.new(branch_name)
@@ -75,6 +80,10 @@ module Code
       name == DEVELOPMENT_BRANCH_NAME
     end
 
+    def master?
+      name == MASTER_BRANCH_NAME
+    end
+
     def protected?
       PROTECTED_BRANCH_NAMES.include? name
     end
@@ -98,15 +107,16 @@ module Code
 
     def push
       ensure_public!
-      System.call "push origin #{name}"
+      System.call "push origin #{name}:#{name}"
     end
 
     def pull
-      System.call "pull origin #{name}"
+      System.call "pull origin #{name}:#{name}"
     end
 
     def checkout
       System.call "checkout #{name}"
+      self
     end
 
     def authorize_delete!
@@ -119,6 +129,10 @@ module Code
 
     def private?
       !! name.match(/-local$/)
+    end
+
+    def hotfix?
+      !! name.match(/^hotfix-/)
     end
 
     def ensure_public!
