@@ -36,10 +36,15 @@ command :start do |c|
 end
 
 desc 'Upload your feature branch to GitHub'
-command :publish do |c|
+command :publish, :pr do |c|
+  c.switch [:master], desc: 'Make the pull request based off the master branch'
   c.action do |global_options, options, args|
     message = args.join(' ')
-    $git.publish message
+
+    base_branch = nil
+    base_branch = Code::Branch.master if options[:master]
+
+    $git.publish(branch: Code::Branch.current, base: base_branch, message: message)
   end
 end
 
