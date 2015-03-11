@@ -131,6 +131,10 @@ module Code
       !! name.match(/-local$/)
     end
 
+    def hotfix?
+      !! name.match(/^hotfix-/)
+    end
+
     def ensure_public!
       raise PrivateBranchError, "#{name} is a private branch" if private?
     end

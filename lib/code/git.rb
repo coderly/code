@@ -45,18 +45,15 @@ module Code
     end
 
     def hotfix(name)
-      raise FeatureExistsError, "Hotfix #{name} already exists" if Branch.exists?(name)
+      name = "hotfix-#{name}"
+      raise FeatureExistsError, "Branch #{name} already exists" if Branch.exists?(name)
 
-      branch = with_stash do
+      with_stash do
         master_branch.checkout unless current_branch.master?
         master_branch.pull
 
         Branch.create(name).checkout
       end
-
-      commit name if uncommitted_changes?
-
-      publish(branch: branch, base: Branch.master)
     end
 
     def switch(*patterns)
@@ -78,9 +75,11 @@ module Code
       System.call "commit -m \"#{message}\""
     end
 
-    def publish(branch:, base:, message: '')
+    def publish(branch:, base: nil, message: '')
       raise NotOnFeatureBranchError, 'Must be on a feature branch to publish your code' unless current_branch.feature?
       raise UncommittedChangesError, 'You have uncommitted changes' if uncommitted_changes?
+
+      base = infer_base_branch(branch) if base.nil?
 
       branch.push
 
@@ -133,6 +132,14 @@ module Code
 
     def master_branch
       Branch.master
+    end
+
+    def infer_base_branch(branch)
+      if branch.hotfix?
+        master_branch
+      else
+        development_branch
+      end
     end
 
     def prune_remote_branches
