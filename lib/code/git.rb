@@ -75,25 +75,30 @@ module Code
       System.call "commit -m \"#{message}\""
     end
 
-    def publish(branch:, base: nil, message: '')
+    def publish(base: nil, message: '')
       raise NotOnFeatureBranchError, 'Must be on a feature branch to publish your code' unless current_branch.feature?
       raise UncommittedChangesError, 'You have uncommitted changes' if uncommitted_changes?
-
-      base = infer_base_branch(branch) if base.nil?
-
-      branch.push
-
-      System.open_in_browser pull_request(branch: branch, base: base, message: message)
+      push
+      generate_prs_for(base, message)
     end
 
     def push
       current_branch.push
     end
 
-    def pull_request(branch:, base:, message: '')
-      message = branch.message if message.empty?
-      command = "hub pull-request -f \"#{message}\" -b #{main_repo}:#{base} -h #{main_repo}:#{branch}"
+    def pull_request(base:, message: '')
+      message = current_branch.message if message.empty?
+      command = "hub pull-request -f \"#{message}\" -b #{main_repo}:#{base} -h #{main_repo}:#{current_branch}"
       System.exec(command).strip
+    end
+
+    def generate_prs_for(base, message)
+      # if a base branch is passed, we only want to generate a pr against that branch
+      return System.open_in_browser pull_request(branch: current_branch, base: base, message: message) if base
+      
+      infer_base_branches.each do |base_branch|
+        System.open_in_browser pull_request(base: base_branch, message: message)
+      end
     end
 
     def compare_in_browser(branch)
@@ -134,11 +139,11 @@ module Code
       Branch.master
     end
 
-    def infer_base_branch(branch)
-      if branch.hotfix?
-        master_branch
+    def infer_base_branches
+      if current_branch.hotfix?
+        [master_branch, development_branch]
       else
-        development_branch
+        [development_branch]
       end
     end
 
