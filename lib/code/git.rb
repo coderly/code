@@ -79,7 +79,7 @@ module Code
       raise NotOnFeatureBranchError, 'Must be on a feature branch to publish your code' unless current_branch.feature?
       raise UncommittedChangesError, 'You have uncommitted changes' if uncommitted_changes?
       push
-      generate_prs_for(base, message)
+      create_prs_for(base, message)
     end
 
     def push
@@ -93,19 +93,19 @@ module Code
       System.exec(command).strip
     end
 
-    def generate_prs_for(base, message)
+    def create_prs_for(base, message)
       if current_branch.hotfix?
-        generate_hotfix_prs(message)
+        create_hotfix_prs(message)
       else
-        generate_feature_pr(base, message)
+        create_feature_pr(base, message)
       end  
     end
 
-    def generate_feature_pr(base, message)
+    def create_feature_pr(base, message)
       System.open_in_browser pull_request(base: base, message: message)
     end
 
-    def generate_hotfix_prs(message)
+    def create_hotfix_prs(message)
       System.open_in_browser pull_request(base: master_branch, message: message)
       System.open_in_browser pull_request(base: development_branch, message: message)
     end
