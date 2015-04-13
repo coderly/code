@@ -13,6 +13,7 @@ rescue LoadError
 end
 
 require 'code/git'
+require 'code/github_api'
 require 'code/branch'
 require 'code/file_list'
 require 'code/system'
@@ -22,6 +23,22 @@ include GLI::App
 program_desc 'The Coderly Toolbelt'
 
 version Code::VERSION
+
+desc 'Authorize with GitHub'
+command :authorize, :login do |c|
+  c.flag 'username', desc: 'GitHub username'
+  c.flag 'password', desc: 'GitHub password'
+  c.action do |global_options, options, args|
+    puts "global_options: #{global_options}"
+    puts "options: #{options}"
+    puts "args: #{args}"
+
+    username = options[:username]
+    password = options[:password]
+
+    Code::GitHubAPI.authorize(username: username, password: password)
+  end
+end
 
 desc 'Describe some switch here'
 switch [:s,:switch]
@@ -44,7 +61,13 @@ command :publish, :pr do |c|
     base_branch = nil
     base_branch = Code::Branch.master if options[:master]
 
-    $git.publish(base: base_branch, message: message)
+    github_api = Code::GitHubAPI.new
+
+    if (github_api.current_branch_pr?)
+      Code::System.open_in_browser(github_api.current_branch_pr_url)
+    else
+      $git.publish(base: base_branch, message: message)
+    end
   end
 end
 

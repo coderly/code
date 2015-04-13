@@ -95,7 +95,7 @@ module Code
     def generate_prs_for(base, message)
       # if a base branch is passed, we only want to generate a pr against that branch
       return System.open_in_browser pull_request(branch: current_branch, base: base, message: message) if base
-      
+
       infer_base_branches.each do |base_branch|
         System.open_in_browser pull_request(base: base_branch, message: message)
       end
