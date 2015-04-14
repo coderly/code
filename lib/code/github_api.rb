@@ -8,36 +8,19 @@ module Code
 
     AUTHORIZATION_NOTE = "Code gem authorization token"
 
-    def self.authorization_token=(token)
-      System.call("config --global oauth.token #{token}")
-    end
-
-    def self.octokit_client_instance_from_basic_auth(username:, password:)
-      client = Octokit::Client.new login: username, password: password
-    end
-
-    def self.authorize(username:, password:)
+    def authorize(username:, password:)
       client = self.octokit_client_instance_from_basic_auth(username: username, password: password)
 
-      authorization = client.authorizations.detect { |auth| auth[:note] == AUTHORIZATION_NOTE}
+      authorization = client.authorizations.detect { |auth| auth[:note] == AUTHORIZATION_NOTE }
+
       if authorization
-        self.authorization_token = authorization[:token]
+        token = authorization[:token]
       else
-        self.authorization_token = client.create_authorization(scopes: ["repo"], note: AUTHORIZATION_NOTE)[:token]
+        token = client.create_authorization(scopes: ["repo"], note: AUTHORIZATION_NOTE)[:token]
       end
-    end
 
-    attr_accessor :origin_url
-    attr_accessor :authorization_token
-
-    def initialize
-      @origin_url = System.call("config --get remote.origin.url")
-
-      begin
-        @authorization_token = System.call('config --get oauth.token')
-      rescue
-        raise NoAuthTokenError, "Couldn't retrieve an authorization token. Make sure you authorize through 'code authorize --username {username} --password {password}' first"
-      end
+      puts "Successfully authorized with token #{token}"
+      self.authorization_token = token
     end
 
     def current_branch_pr_url
@@ -50,12 +33,24 @@ module Code
       client.pull_requests(current_repo, head: "#{current_organization}:#{current_branch}").any?
     end
 
+    def octokit_client_instance_from_token
+      client = Octokit::Client.new access_token: authorization_token
+    end
+
+    def octokit_client_instance_from_basic_auth(username:, password:)
+      client = Octokit::Client.new login: username, password: password
+    end
+
+    def origin_url
+      System.result("git config --get remote.origin.url")
+    end
+
     def current_organization
-      @origin_url.split('/')[-2]
+      origin_url.split('/')[-2]
     end
 
     def current_repo_name
-      @origin_url.split("/")[-1].split('.')[0]
+      origin_url.split("/")[-1].split('.')[0]
     end
 
     def current_repo
@@ -66,8 +61,14 @@ module Code
       Branch.current
     end
 
-    def octokit_client_instance_from_token
-      client = Octokit::Client.new access_token: authorization_token
+    def authorization_token
+      token = System.result('git config --get oauth.token')
+      raise NoAuthTokenError, "Couldn't retrieve an authorization token. Make sure you authorize through 'code authorize --username {username} --password {password}' first" if System.command_failed?
+      token
+    end
+
+    def authorization_token=(token)
+      System.result("git config --global oauth.token #{token}")
     end
   end
 end

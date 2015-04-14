@@ -32,7 +32,7 @@ command :authorize, :login do |c|
     username = options[:username]
     password = options[:password]
 
-    Code::GitHubAPI.authorize(username: username, password: password)
+    Code::GitHubAPI.new.authorize(username: username, password: password)
   end
 end
 
