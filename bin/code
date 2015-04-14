@@ -78,7 +78,7 @@ desc "mark the current branch's pr as awaiting review"
 command :ready do |c|
   c.action do |global_options, options, args|
      github_api = Code::GitHubAPI.new
-     github_api.mark_current_branch_as_awaiting_review
+     github_api.mark_current_pr_as_awaiting_review
    end
 end
 

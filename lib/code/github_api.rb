@@ -25,9 +25,13 @@ module Code
       self.authorization_token = token
     end
 
-    def current_branch_pr
+    def current_branch_prs
       client = octokit_client_instance_from_token
-      client.pull_requests(current_repo, head: "#{current_organization}:#{current_branch}")[0]
+      client.pull_requests(current_repo, head: "#{current_organization}:#{current_branch}")
+    end
+
+    def current_branch_pr
+      current_branch_prs[0]  
     end
 
     def current_branch_pr_url
@@ -39,11 +43,20 @@ module Code
       client.pull_requests(current_repo, head: "#{current_organization}:#{current_branch}").any?
     end
 
-    def mark_current_branch_as_awaiting_review
+    def mark_current_pr_as_awaiting_review
       raise NoPRError, "There's no PR for the current branch" unless current_branch_pr?
       # all PRs are issues, so we user the issue number.
       add_label_to_issue(current_issue_number, "awaiting review")
     end
+
+    def mark_current_prs_as_hotfix
+      raise NoPRError, "There's no PR for the current branch" unless current_branch_pr?
+
+      current_branch_prs.each do |pr|
+        add_label_to_issue(pr.number, "hotfix")
+      end
+    end
+
 
     def octokit_client_instance_from_token
       client = Octokit::Client.new access_token: authorization_token
