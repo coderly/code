@@ -44,7 +44,7 @@ command :publish, :pr do |c|
     base_branch = nil
     base_branch = Code::Branch.master if options[:master]
 
-    $git.publish(branch: Code::Branch.current, base: base_branch, message: message)
+    $git.publish(base: base_branch, message: message)
   end
 end
 
