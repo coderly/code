@@ -29,10 +29,6 @@ command :authorize, :login do |c|
   c.flag 'username', desc: 'GitHub username'
   c.flag 'password', desc: 'GitHub password'
   c.action do |global_options, options, args|
-    puts "global_options: #{global_options}"
-    puts "options: #{options}"
-    puts "args: #{args}"
-
     username = options[:username]
     password = options[:password]
 
