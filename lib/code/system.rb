@@ -20,7 +20,13 @@ module Code
     end
 
     def open(item)
-      `open #{item}`
+      if (/darwin/ =~ RUBY_PLATFORM) != nil
+        command = "open"
+      elsif (/cygwin|mswin|mingw|bccwin|wince|emx/ =~ RUBY_PLATFORM) == nil
+        command ="xdg-open"
+      end
+
+      `#{command} #{item}`
     end
 
     def exec(script)
