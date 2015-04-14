@@ -74,6 +74,14 @@ command :push, :p do |c|
   end
 end
 
+desc "mark the current branch's pr as awaiting review"
+command :ready do |c|
+  c.action do |global_options, options, args|
+     github_api = Code::GitHubAPI.new
+     github_api.mark_current_branch_as_awaiting_review
+   end
+end
+
 desc "Quickly create a pull request from your changes on development."
 command :hotfix, :fix do |c|
   c.action do |global_options, options, args|

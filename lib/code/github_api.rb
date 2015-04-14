@@ -5,6 +5,8 @@ module Code
   class GitHubAPI
 
     NoAuthTokenError = Class.new(StandardError)
+    NoPRError = Class.new(StandardError)
+
 
     AUTHORIZATION_NOTE = "Code gem authorization token"
 
@@ -23,14 +25,24 @@ module Code
       self.authorization_token = token
     end
 
-    def current_branch_pr_url
+    def current_branch_pr
       client = octokit_client_instance_from_token
-      client.pull_requests(current_repo, head: "#{current_organization}:#{current_branch}")[0][:html_url]
+      client.pull_requests(current_repo, head: "#{current_organization}:#{current_branch}")[0]
+    end
+
+    def current_branch_pr_url
+      current_branch_pr[:html_url]
     end
 
     def current_branch_pr?
       client = self.octokit_client_instance_from_token
       client.pull_requests(current_repo, head: "#{current_organization}:#{current_branch}").any?
+    end
+
+    def mark_current_branch_as_awaiting_review
+      raise NoPRError, "There's no PR for the current branch" unless current_branch_pr?
+      # all PRs are issues, so we user the issue number.
+      add_label_to_issue(current_issue_number, "awaiting review")
     end
 
     def octokit_client_instance_from_token
@@ -41,12 +53,14 @@ module Code
       client = Octokit::Client.new login: username, password: password
     end
 
+    private
+
     def origin_url
       System.result("git config --get remote.origin.url")
     end
 
     def current_organization
-      origin_url.split('/')[-2]
+      origin_url.split('/')[-2].split(':')[1]
     end
 
     def current_repo_name
@@ -59,6 +73,14 @@ module Code
 
     def current_branch
       Branch.current
+    end
+
+    def current_issue_number
+      current_branch_pr.number
+    end
+
+    def add_label_to_issue(number, label)
+      octokit_client_instance_from_token.add_labels_to_an_issue(current_repo, number, [label])
     end
 
     def authorization_token
