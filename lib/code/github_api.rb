@@ -4,6 +4,8 @@ module Code
 
   class GitHubAPI
 
+    NoAuthTokenError = Class.new(StandardError)
+
     AUTHORIZATION_NOTE = "Code gem authorization token"
 
     def self.authorization_token=(token)
@@ -30,17 +32,22 @@ module Code
 
     def initialize
       @origin_url = System.call("config --get remote.origin.url")
-      @authorization_token = System.call('config --get oauth.token')
+
+      begin
+        @authorization_token = System.call('config --get oauth.token')
+      rescue
+        raise NoAuthTokenError, "Couldn't retrieve an authorization token. Make sure you authorize through 'code authorize --username {username} --password {password}' first"
+      end
     end
 
     def current_branch_pr_url
       client = octokit_client_instance_from_token
-      client.pull_requests(current_repo, head: "#{current_organization}:#{Branch.current}")[0][:html_url]
+      client.pull_requests(current_repo, head: "#{current_organization}:#{current_branch}")[0][:html_url]
     end
 
     def current_branch_pr?
       client = self.octokit_client_instance_from_token
-      client.pull_requests(current_repo, head: "#{current_organization}:#{Branch.current}").any?
+      client.pull_requests(current_repo, head: "#{current_organization}:#{current_branch}").any?
     end
 
     def current_organization
@@ -53,6 +60,10 @@ module Code
 
     def current_repo
       "#{current_organization}/#{current_repo_name}"
+    end
+
+    def current_branch
+      Branch.current
     end
 
     def octokit_client_instance_from_token
