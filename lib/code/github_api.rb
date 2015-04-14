@@ -46,11 +46,14 @@ module Code
     end
 
     def current_organization
-      origin_url.split('/')[-2]
+      organization_name = origin_url.split("/")[-2]
+      organization_name.sub!("git@github.com:","")
+      organization_name
     end
 
     def current_repo_name
-      origin_url.split("/")[-1].split('.')[0]
+      repo_name_with_extension = origin_url.split("/").last
+      repo_name_without_extension = repo_name_with_extension.sub(".git", "")
     end
 
     def current_repo
