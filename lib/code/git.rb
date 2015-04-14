@@ -101,6 +101,10 @@ module Code
       end  
     end
 
+    def search
+      System.open_in_browser "https://github.com/#{current_repo}/find/development"
+    end
+
     def create_feature_pr(base, message)
       System.open_in_browser pull_request(base: base, message: message)
     end
@@ -162,6 +166,22 @@ module Code
 
     def repo_url(name)
       System.result("git ls-remote --get-url #{name}")
+    end
+
+    def origin_url
+      System.result("git config --get remote.origin.url")
+    end
+
+    def current_organization
+      origin_url.split('/')[-2].split(':')[1]
+    end
+
+    def current_repo_name
+      origin_url.split("/")[-1].split('.')[0]
+    end
+
+    def current_repo
+      "#{current_organization}/#{current_repo_name}"
     end
 
   end
