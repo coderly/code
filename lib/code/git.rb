@@ -110,7 +110,7 @@ module Code
     def create_hotfix_prs(message)
       System.open_in_browser pull_request(base: master_branch, message: message)
       System.open_in_browser pull_request(base: development_branch, message: message)
-      github_api.mark_current_prs_as_hotfix
+      current_branch.mark_prs_as_hotfix
     end
 
     def compare_in_browser(branch)

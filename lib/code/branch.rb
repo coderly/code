@@ -1,13 +1,18 @@
+require 'code/pull_request'
+
 module Code
 
   class Branch
 
     ProtectedBranchError = Class.new(StandardError)
     PrivateBranchError = Class.new(StandardError)
+    NoPRError = Class.new(StandardError)
+
 
     MASTER_BRANCH_NAME = 'master'
     DEVELOPMENT_BRANCH_NAME = 'development'
     PROTECTED_BRANCH_NAMES = %w{master development}
+
 
     def self.all_names
       System.result('git branch').strip.lines.map { |line| line.gsub(/\s|\*/, '') }
@@ -135,12 +140,48 @@ module Code
       !! name.match(/^hotfix-/)
     end
 
+    def has_pr?
+      !pull_request.nil?
+    end
+
+    def mark_prs_as_awaiting_review
+      label_prs("awaiting review")
+    end
+
+    def mark_prs_as_hotfix
+      label_prs('hotfix')
+    end
+
+    def pull_request
+      pull_requests.first
+    end
+
+    def pull_requests
+      @pull_request ||= PullRequest.for_branch(self)
+    end
+
+    def pull_request_url
+      # This could be a delegate, but it seems easier to read just by 
+      # calling it.
+      pull_request.url
+    end
+
     def ensure_public!
       raise PrivateBranchError, "#{name} is a private branch" if private?
     end
 
     attr_reader :name
     alias_method :to_s, :name
+
+    private
+
+    def label_prs(label)
+      raise NoPRError, "There is no PR for the this branch" unless has_pr?
+
+      pull_requests.each do |pr|
+        pr.add_label(label)
+      end
+    end
 
   end
 end

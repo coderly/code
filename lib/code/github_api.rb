@@ -5,8 +5,6 @@ module Code
   class GitHubAPI
 
     NoAuthTokenError = Class.new(StandardError)
-    NoPRError = Class.new(StandardError)
-
 
     AUTHORIZATION_NOTE = "Code gem authorization token"
 
@@ -25,38 +23,10 @@ module Code
       self.authorization_token = token
     end
 
-    def current_branch_prs
-      client = octokit_client_instance_from_token
-      client.pull_requests(current_repo, head: "#{current_organization}:#{current_branch}")
-    end
-
-    def current_branch_pr
-      current_branch_prs[0]  
-    end
-
-    def current_branch_pr_url
-      current_branch_pr[:html_url]
-    end
-
-    def current_branch_pr?
+    def prs_for_branch(branch)
       client = self.octokit_client_instance_from_token
-      client.pull_requests(current_repo, head: "#{current_organization}:#{current_branch}").any?
+      client.pull_requests(current_repo, head: "#{current_organization}:#{branch.name}")
     end
-
-    def mark_current_pr_as_awaiting_review
-      raise NoPRError, "There's no PR for the current branch" unless current_branch_pr?
-      # All PRs are issues, so we use the issue number.
-      add_label_to_issue(current_issue_number, "awaiting review")
-    end
-
-    def mark_current_prs_as_hotfix
-      raise NoPRError, "There's no PR for the current branch" unless current_branch_pr?
-
-      current_branch_prs.each do |pr|
-        add_label_to_issue(pr.number, "hotfix")
-      end
-    end
-
 
     def octokit_client_instance_from_token
       client = Octokit::Client.new access_token: authorization_token
@@ -64,6 +34,10 @@ module Code
 
     def octokit_client_instance_from_basic_auth(username:, password:)
       client = Octokit::Client.new login: username, password: password
+    end
+
+    def label_pr(pull_request, label)
+      add_label_to_pr(pull_request.number, label) 
     end
 
     private
@@ -88,11 +62,7 @@ module Code
       Branch.current
     end
 
-    def current_issue_number
-      current_branch_pr.number
-    end
-
-    def add_label_to_issue(number, label)
+    def add_label_to_pr(number, label)
       octokit_client_instance_from_token.add_labels_to_an_issue(current_repo, number, [label])
     end
 
