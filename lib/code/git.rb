@@ -75,39 +75,25 @@ module Code
       System.call "commit -m \"#{message}\""
     end
 
-    def publish(base: nil, message: '')
+    def publish(branch:, base: nil, message: '')
       raise NotOnFeatureBranchError, 'Must be on a feature branch to publish your code' unless current_branch.feature?
       raise UncommittedChangesError, 'You have uncommitted changes' if uncommitted_changes?
-      push
-      create_prs_for(base, message)
+
+      base = infer_base_branch(branch) if base.nil?
+
+      branch.push
+
+      System.open_in_browser pull_request(branch: branch, base: base, message: message)
     end
 
     def push
       current_branch.push
     end
 
-    def pull_request(base:, message: '')
-      base = development_branch unless base
-      message = current_branch.message if message.empty?
-      command = "hub pull-request -f \"#{message}\" -b #{main_repo}:#{base} -h #{main_repo}:#{current_branch}"
+    def pull_request(branch:, base:, message: '')
+      message = branch.message if message.empty?
+      command = "hub pull-request -f \"#{message}\" -b #{main_repo}:#{base} -h #{main_repo}:#{branch}"
       System.exec(command).strip
-    end
-
-    def create_prs_for(base, message)
-      if current_branch.hotfix?
-        create_hotfix_prs(message)
-      else
-        create_feature_pr(base, message)
-      end
-    end
-
-    def create_feature_pr(base, message)
-      System.open_in_browser pull_request(base: base, message: message)
-    end
-
-    def create_hotfix_prs(message)
-      System.open_in_browser pull_request(base: master_branch, message: message)
-      System.open_in_browser pull_request(base: development_branch, message: message)
     end
 
     def compare_in_browser(branch)
@@ -146,6 +132,14 @@ module Code
 
     def master_branch
       Branch.master
+    end
+
+    def infer_base_branch(branch)
+      if branch.hotfix?
+        master_branch
+      else
+        development_branch
+      end
     end
 
     def prune_remote_branches
