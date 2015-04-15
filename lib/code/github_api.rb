@@ -29,7 +29,7 @@ module Code
     end
 
     def current_branch_pr?
-      client = self.octokit_client_instance_from_token
+      client = octokit_client_instance_from_token
       client.pull_requests(current_repo, head: "#{current_organization}:#{current_branch}").any?
     end
 
@@ -47,7 +47,10 @@ module Code
 
     def current_organization
       organization_name = origin_url.split("/")[-2]
-      organization_name.sub!("git@github.com:","")
+
+      possible_prefix = "git@github.com:"
+      organization_name.sub!(possible_prefix,"")
+
       organization_name
     end
 
