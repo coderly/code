@@ -38,9 +38,9 @@ module Code
     end
     
     # I need a github api instance to create instances
-    # and also need an api instance once the api is created
-    # I tried to solve this problem with modules and complicated
-    # solutions, but I'll duplicate it for now.
+    # and also need an api instance once the PullRequest instance is created
+    # I tried to solve this problem with modules by extending on the two places
+    # but it seems like overkilling it, I'll duplicate it for now.
     def self.github_api
       @github_api ||= GitHubAPI.new
     end
