@@ -45,7 +45,7 @@ module Code
 
     def mark_current_pr_as_awaiting_review
       raise NoPRError, "There's no PR for the current branch" unless current_branch_pr?
-      # all PRs are issues, so we user the issue number.
+      # All PRs are issues, so we use the issue number.
       add_label_to_issue(current_issue_number, "awaiting review")
     end
 
