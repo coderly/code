@@ -2,12 +2,8 @@ module Code
 
   class Repository
 
-    def self.current_repository_url
-      System.result("git config --get remote.origin.url")
-    end
-
-    def self.from_current_repository_url
-      new(url: Repository.current_repository_url)
+    def self.current
+      new(url: System.result("git config --get remote.origin.url"))
     end
 
     def initialize(url:)

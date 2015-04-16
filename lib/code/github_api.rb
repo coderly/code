@@ -9,7 +9,7 @@ module Code
 
     AUTHORIZATION_NOTE = "Code gem authorization token"
 
-    def initialize(repository: Repository.from_current_repository_url)
+    def initialize(repository: Repository.current)
       @repository = repository
     end
 
