@@ -1,4 +1,5 @@
 require "octokit"
+require "code/repository"
 
 module Code
 
@@ -7,6 +8,10 @@ module Code
     NoAuthTokenError = Class.new(StandardError)
 
     AUTHORIZATION_NOTE = "Code gem authorization token"
+
+    def initialize(repository: Repository.from_current_repository_url)
+      @repository = repository
+    end
 
     def authorize(username:, password:)
       client = self.octokit_client_instance_from_basic_auth(username: username, password: password)
@@ -25,7 +30,7 @@ module Code
 
     def pull_requests_for_branch(branch)
       client = self.octokit_client_instance_from_token
-      client.pull_requests(current_repo, head: "#{current_organization}:#{branch.name}")
+      client.pull_requests(current_repo_slug, head: "#{current_organization}:#{branch.name}")
     end
 
     def octokit_client_instance_from_token
@@ -42,26 +47,12 @@ module Code
 
     private
 
-    def origin_url
-      System.result("git config --get remote.origin.url")
-    end
-
     def current_organization
-      organization_name = origin_url.split("/")[-2]
-
-      possible_prefix = "git@github.com:"
-      organization_name.sub!(possible_prefix,"")
-
-      organization_name
+      @repository.organization
     end
 
-    def current_repo_name
-      repo_name_with_extension = origin_url.split("/").last
-      repo_name_without_extension = repo_name_with_extension.sub(".git", "")
-    end
-
-    def current_repo
-      "#{current_organization}/#{current_repo_name}"
+    def current_repo_slug
+      @repository.slug
     end
 
     def current_branch
@@ -69,7 +60,7 @@ module Code
     end
 
     def add_label_to_pr(number, label)
-      octokit_client_instance_from_token.add_labels_to_an_issue(current_repo, number, [label])
+      octokit_client_instance_from_token.add_labels_to_an_issue(current_repo_slug, number, [label])
     end
 
     def authorization_token
