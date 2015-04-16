@@ -58,7 +58,7 @@ command :publish, :pr do |c|
     base_branch = Code::Branch.master if options[:master]
     current_branch = Code::Branch.current
 
-    if (current_branch.has_pr?)
+    if (current_branch.has_pull_request?)
       Code::System.open_in_browser(current_branch.pull_request_url)
     else
       $git.publish(base: base_branch, message: message)

@@ -140,7 +140,7 @@ module Code
       !! name.match(/^hotfix-/)
     end
 
-    def has_pr?
+    def has_pull_request?
       !pull_request.nil?
     end
 
@@ -161,7 +161,7 @@ module Code
     end
 
     def pull_request_url
-      # This could be a delegate, but it seems easier to read just by 
+      # This could be a delegate, but it seems easier to read just by
       # calling it.
       pull_request.url
     end
