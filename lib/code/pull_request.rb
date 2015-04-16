@@ -8,7 +8,7 @@ module Code
     end
 
     def self.for_branch(branch)
-      fetch_prs_for_branch(branch).map do |pull_request_info|
+      fetch_pull_requests_for_branch(branch).map do |pull_request_info|
         new(pull_request_info)
       end
     end
@@ -33,10 +33,10 @@ module Code
       @github_api ||= GitHubAPI.new
     end
 
-    def self.fetch_prs_for_branch(branch)
-      github_api.prs_for_branch(branch)
+    def self.fetch_pull_requests_for_branch(branch)
+      github_api.pull_requests_for_branch(branch)
     end
-    
+
     # I need a github api instance to create instances
     # and also need an api instance once the PullRequest instance is created
     # I tried to solve this problem with modules by extending on the two places
