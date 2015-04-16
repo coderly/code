@@ -2,6 +2,7 @@ require 'uri'
 
 require 'code/branch'
 require 'code/system'
+require 'code/github_api'
 
 module Code
 
@@ -80,6 +81,7 @@ module Code
       raise UncommittedChangesError, 'You have uncommitted changes' if uncommitted_changes?
       push
       create_prs_for(base, message)
+
     end
 
     def push
@@ -108,6 +110,7 @@ module Code
     def create_hotfix_prs(message)
       System.open_in_browser pull_request(base: master_branch, message: message)
       System.open_in_browser pull_request(base: development_branch, message: message)
+      current_branch.mark_prs_as_hotfix
     end
 
     def compare_in_browser(branch)
@@ -162,6 +165,10 @@ module Code
 
     def repo_url(name)
       System.result("git ls-remote --get-url #{name}")
+    end
+
+    def github_api
+      @github_api ||= GitHubAPI.new
     end
 
   end
