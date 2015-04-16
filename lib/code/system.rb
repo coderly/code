@@ -1,3 +1,5 @@
+require 'code/os'
+
 module Code
   module System
     extend self
@@ -20,7 +22,9 @@ module Code
     end
 
     def open(item)
-      `open #{item}`
+      command = OS.open_command
+
+      `#{command} #{item}`
     end
 
     def exec(script)
