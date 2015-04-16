@@ -23,7 +23,7 @@ module Code
       self.authorization_token = token
     end
 
-    def prs_for_branch(branch)
+    def pull_requests_for_branch(branch)
       client = self.octokit_client_instance_from_token
       client.pull_requests(current_repo, head: "#{current_organization}:#{branch.name}")
     end
@@ -37,7 +37,7 @@ module Code
     end
 
     def label_pr(pull_request, label)
-      add_label_to_pr(pull_request.number, label) 
+      add_label_to_pr(pull_request.number, label)
     end
 
     private
@@ -47,11 +47,17 @@ module Code
     end
 
     def current_organization
-      origin_url.split('/')[-2].split(':')[1]
+      organization_name = origin_url.split("/")[-2]
+
+      possible_prefix = "git@github.com:"
+      organization_name.sub!(possible_prefix,"")
+
+      organization_name
     end
 
     def current_repo_name
-      origin_url.split("/")[-1].split('.')[0]
+      repo_name_with_extension = origin_url.split("/").last
+      repo_name_without_extension = repo_name_with_extension.sub(".git", "")
     end
 
     def current_repo
