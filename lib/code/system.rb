@@ -22,7 +22,7 @@ module Code
     end
 
     def open(item)
-      command = OS.open_command
+      command = OS.current.open_command
 
       `#{command} #{item}`
     end

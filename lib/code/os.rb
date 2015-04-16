@@ -2,25 +2,35 @@ module Code
   module System
     class OS
 
-      def self.windows?
-        (/cygwin|mswin|mingw|bccwin|wince|emx/ =~ RUBY_PLATFORM) != nil
+      def self.current
+        new(platform_string: RUBY_PLATFORM)
       end
 
-      def self.unix?
-        !self.windows?
+      def initialize(platform_string:)
+        @platform_string = platform_string
       end
 
-      def self.osx?
-        (/darwin/ =~ RUBY_PLATFORM) != nil
+      def windows?
+        (/cygwin|mswin|mingw|bccwin|wince|emx/ =~ @platform_string) != nil
       end
 
-      def self.linux?
-         self.unix? and not self.osx?
+      def unix?
+        !windows?
       end
 
-      def self.open_command
-        "open" if self.osx?
-        "xdg-open" if self.linux?
+      def osx?
+        (/darwin/ =~ @platform_string) != nil
+      end
+
+      def linux?
+         unix? and not osx?
+      end
+
+      def open_command
+        command = "open" if osx?
+        command = "xdg-open" if linux?
+
+        command
       end
     end
   end
