@@ -1,4 +1,4 @@
-require 'code/os'
+require 'code/system/os'
 
 module Code
   module System
