@@ -34,14 +34,14 @@ module Code
       describe "#open_command" do
         it "returns 'open' for osx" do
           platform_string ="x86_64-darwin14"
-          os_detector = Code::System::OS.new(platform_string: platform_string)
+          os_detector = OS.new(platform_string: platform_string)
 
           expect(os_detector.open_command).to eq "open"
         end
 
         it "returns 'xdg-open' for linux" do
           platform_string ="x86_64-linux"
-          os_detector = Code::System::OS.new(platform_string: platform_string)
+          os_detector = OS.new(platform_string: platform_string)
 
           expect(os_detector.open_command).to eq "xdg-open"
         end
