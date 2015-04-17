@@ -26,7 +26,7 @@ module Code
 
       it "detects osx" do
         platform_string = "x86_64-darwin14"
-        os_detector = Code::System::OS.new(platform_string: platform_string)
+        os_detector = OS.new(platform_string: platform_string)
 
         expect(os_detector.osx?).to be true
       end
