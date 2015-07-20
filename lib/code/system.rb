@@ -1,3 +1,5 @@
+require 'code/system/os'
+
 module Code
   module System
     extend self
@@ -20,11 +22,7 @@ module Code
     end
 
     def open(item)
-      if (/darwin/ =~ RUBY_PLATFORM) != nil
-        command = "open"
-      elsif (/cygwin|mswin|mingw|bccwin|wince|emx/ =~ RUBY_PLATFORM) == nil
-        command ="xdg-open"
-      end
+      command = OS.current.open_command
 
       `#{command} #{item}`
     end
