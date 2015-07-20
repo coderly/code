@@ -1,28 +1,32 @@
 require "octokit"
 require "code/repository"
+require "securerandom"
 
 module Code
 
   class GitHubAPI
 
-    NoAuthTokenError = Class.new(StandardError)
-
-    AUTHORIZATION_NOTE = "Code gem authorization token"
+    def authorization_note
+      "CoderlyCode-" + SecureRandom.uuid
+    end
 
     def initialize(repository: Repository.current)
       @repository = repository
     end
 
+    def ensure_authorized
+      if not authorized?
+        username = prompt 'GitHub username'
+        password = prompt 'GitHub password'
+
+        authorize(username: username, password: password)
+      end
+    end
+
     def authorize(username:, password:)
       client = self.octokit_client_instance_from_basic_auth(username: username, password: password)
 
-      authorization = client.authorizations.detect { |auth| auth[:note] == AUTHORIZATION_NOTE }
-
-      if authorization
-        token = authorization[:token]
-      else
-        token = client.create_authorization(scopes: ["repo"], note: AUTHORIZATION_NOTE)[:token]
-      end
+      token = client.create_authorization(scopes: ["repo"], note: authorization_note)[:token]
 
       puts "Successfully authorized with token #{token}"
       self.authorization_token = token
@@ -45,6 +49,10 @@ module Code
       add_label_to_pr(pull_request.number, label)
     end
 
+    def authorized?
+      !authorization_token.empty?
+    end
+
     private
 
     def current_organization
@@ -65,12 +73,17 @@ module Code
 
     def authorization_token
       token = System.result('git config --get oauth.token')
-      raise NoAuthTokenError, "Couldn't retrieve an authorization token. Make sure you authorize through 'code authorize --username {username} --password {password}' first" if System.command_failed?
       token
     end
 
     def authorization_token=(token)
       System.result("git config --global oauth.token #{token}")
+    end
+
+    def prompt(prompt_text)
+      print prompt_text + ':'
+      input = gets
+      input.strip
     end
   end
 end
