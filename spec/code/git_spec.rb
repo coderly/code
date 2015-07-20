@@ -92,9 +92,6 @@ module Code
 
       it 'should call System.open_in_browser with the proper url' do
         expect(System).to receive(:open_in_browser).with('https://github.com/testuser/codegit/find/development')
-
-        git = Git.new
-
         git.search
       end
     end
