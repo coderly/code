@@ -104,7 +104,7 @@ module Code
     end
 
     def search
-      System.open_in_browser "https://github.com/#current_repo_slug/find/development"
+      System.open_in_browser "https://github.com/#{current_repo_slug}/find/development"
     end
 
     def create_feature_pr(base, message)
