@@ -14,6 +14,7 @@ module Code
         System.exec 'touch README'
         System.call 'add -A'
         System.call 'commit -m "initial commit"'
+        System.call 'remote add origin https:/github.com/testuser/codegit'
       end
     end
 
