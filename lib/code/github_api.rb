@@ -1,6 +1,7 @@
 require "octokit"
 require "code/repository"
 require "securerandom"
+require "io/console"
 
 module Code
 
@@ -17,7 +18,7 @@ module Code
     def ensure_authorized
       if not authorized?
         username = prompt 'GitHub username'
-        password = prompt 'GitHub password'
+        password = prompt_password 'GitHub password'
 
         authorize(username: username, password: password)
       end
@@ -83,6 +84,13 @@ module Code
     def prompt(prompt_text)
       print prompt_text + ':'
       input = gets
+      input.strip
+    end
+
+    def prompt_password(prompt_text)
+      print prompt_text + ':'
+      input = STDIN.noecho(&:gets)
+      puts
       input.strip
     end
   end
