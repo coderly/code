@@ -103,6 +103,10 @@ module Code
       end
     end
 
+    def search
+      System.open_in_browser "https://github.com/#{current_repo_slug}/find/development"
+    end
+
     def create_feature_pr(base, message)
       System.open_in_browser pull_request(base: base, message: message)
     end
@@ -169,6 +173,10 @@ module Code
 
     def github_api
       @github_api ||= GitHubAPI.new
+    end
+
+    def current_repo_slug
+      Repository.current.slug
     end
 
   end

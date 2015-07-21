@@ -102,6 +102,13 @@ command :switch, :s do |c|
   end
 end
 
+desc "Opens the repository search interface on github"
+command :search do |c|
+  c.action do |global_options, options, args|
+    $git.search
+  end
+end
+
 desc 'Deploy to production'
 command :production do |c|
   c.action do |global_options, options, args|
