@@ -13,7 +13,8 @@ module Code
 
         it 'should not call #authorize' do
           expect(api).not_to receive(:authorize)
-          expect(api).not_to receive(:prompt)
+          expect(System).not_to receive(:prompt)
+          expect(System).not_to receive(:prompt_text)
 
           api.ensure_authorized
         end
@@ -26,7 +27,8 @@ module Code
 
         it 'should call #authorize' do
           expect(api).to receive(:authorize)
-          expect(api).to receive(:prompt).twice
+          expect(System).to receive(:prompt).once
+          expect(System).to receive(:prompt_hidden).once
 
           api.ensure_authorized
         end
