@@ -100,7 +100,11 @@ module Code
         create_hotfix_prs(message)
       else
         create_feature_pr(base, message)
-      end  
+      end
+    end
+
+    def search
+      System.open_in_browser "https://github.com/#{current_repo_slug}/find/development"
     end
 
     def create_feature_pr(base, message)
@@ -169,6 +173,10 @@ module Code
 
     def github_api
       @github_api ||= GitHubAPI.new
+    end
+
+    def current_repo_slug
+      Repository.current.slug
     end
 
   end
