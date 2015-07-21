@@ -75,7 +75,6 @@ end
 desc "Quickly create a pull request from your changes on development."
 command :hotfix, :fix do |c|
   c.action do |global_options, options, args|
-    $gitHubAPI.ensure_authorized
     hotfix_name = args.join('-')
     $git.hotfix hotfix_name
   end
