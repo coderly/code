@@ -1,3 +1,5 @@
+require "io/console"
+
 require 'code/system/os'
 
 module Code
@@ -8,9 +10,17 @@ module Code
 
     COLORS = {black: 30, red: 31, green: 32, yellow: 33, blue: 34, magenta: 35, teal: 36}
 
-    def prompt(*args)
-      print(*args)
-      gets
+    def prompt(prompt_text)
+      print prompt_text + ': '
+      input = gets
+      input.strip
+    end
+
+    def prompt_hidden(prompt_text)
+      print prompt_text + ': '
+      input = STDIN.noecho(&:gets)
+      puts ''
+      input.strip
     end
 
     def error(message)

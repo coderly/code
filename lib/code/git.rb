@@ -100,7 +100,7 @@ module Code
         create_hotfix_prs(message)
       else
         create_feature_pr(base, message)
-      end  
+      end
     end
 
     def create_feature_pr(base, message)
