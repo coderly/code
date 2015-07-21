@@ -11,15 +11,15 @@ module Code
     COLORS = {black: 30, red: 31, green: 32, yellow: 33, blue: 34, magenta: 35, teal: 36}
 
     def prompt(prompt_text)
-      print prompt_text + ': '
+      print prompt_text + ": "
       input = gets
       input.strip
     end
 
     def prompt_hidden(prompt_text)
-      print prompt_text + ': '
-      input = STDIN.noecho(&:gets)
-      puts ''
+      print prompt_text + ": "
+      input = noecho_gets
+      puts ""
       input.strip
     end
 
@@ -50,6 +50,10 @@ module Code
 
     def puts(text)
       Kernel.puts text
+    end
+
+    def noecho_gets
+      STDIN.noecho(&:gets)
     end
 
     def call(params)
