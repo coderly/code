@@ -57,5 +57,40 @@ module Code
         System.open_in_browser("000")
       end
     end
+
+    describe "#error" do
+      it "calls abort with a red message" do
+        expect(System).to receive(:abort)
+        expect(System).to receive(:red).with("message")
+
+        System.error "message"
+      end
+    end
+
+    describe "#exec" do
+      it "calls #puts with a green message, then executes the command using Kernel backtick" do
+        expect(System).to receive(:puts)
+        expect(System).to receive(:green).with("message")
+        expect(System).to receive(:command_failed?).and_return(false)
+        expect(System).to receive(:`)
+        System.exec "message"
+      end
+
+      it "raises a CommandFailedError if command has failed, with red text" do
+        allow(System).to receive(:puts)
+        allow(System).to receive(:green)
+        expect(System).to receive(:red)
+        expect(System).to receive(:command_failed?).and_return(true)
+        expect(System).to receive(:`)
+        expect { System.exec "message" }.to raise_error System::CommandFailedError
+      end
+    end
+
+    describe "#call" do
+      it "calls #exec with git prepended to the command script" do
+        expect(System).to receive(:exec).with("git some command")
+        System.call "some command"
+      end
+    end
   end
 end
