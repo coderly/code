@@ -149,7 +149,7 @@ module Code
       it "makes a system call to create a branch and returns a branch instance" do
         expect(System).to receive(:call).with("branch test_branch")
 
-        branch = Branch.create("test_branch")
+        branch = Branch.create "test_branch"
 
         expect(branch).to be_a Branch
         expect(branch.name).to eq "test_branch"
@@ -160,7 +160,7 @@ module Code
       it "creates a new Branch instance with specified name, but makes no System.call" do
         expect(System).not_to receive(:call)
 
-        branch = Branch.find("test_branch")
+        branch = Branch.find "test_branch"
 
         expect(branch).to be_a Branch
         expect(branch.name).to eq "test_branch"
@@ -169,9 +169,9 @@ module Code
 
     describe "#==" do
       it "compares by branch name" do
-        branch_a = Branch.find "branch-a"
-        branch_b = Branch.find "branch-b"
-        other_branch_a = Branch.find "branch-a"
+        branch_a = Branch.new "branch-a"
+        branch_b = Branch.new "branch-b"
+        other_branch_a = Branch.new "branch-a"
 
         expect(branch_a == branch_b).to eq false
         expect(branch_a == other_branch_a).to eq true
@@ -181,7 +181,7 @@ module Code
 
     describe "#matches?" do
       it "returns true if the branch name matches all the patterns" do
-        branch = Branch.find "test-branch"
+        branch = Branch.new "test-branch"
 
         expect(branch.matches? "test").to eq true
         expect(branch.matches? "test", "branch").to eq true
@@ -190,7 +190,7 @@ module Code
       end
 
       it "returns false if the branch name matches some or none of the patterns" do
-        branch = Branch.find "test-branch"
+        branch = Branch.new "test-branch"
 
         expect(branch.matches? "test_branch").to eq false
         expect(branch.matches? "tst").to eq false
@@ -201,7 +201,7 @@ module Code
     describe "#exists" do
 
       it "calls System.result and returns the result" do
-        test_branch_1 = Branch.find("test-branch-1")
+        test_branch_1 = Branch.new "test-branch-1"
 
         expect(System).to receive(:result).with("git show-ref refs/heads/test-branch-1").and_return("something")
         expect(test_branch_1.exists?).to eq true
@@ -214,9 +214,9 @@ module Code
       it "returns true if the branch with the provided instance name exists in the git repo" do
         setup_test_repo(name: "test_repo", branches: ["test-branch-1", "test-branch-2"])
 
-        test_branch_1 = Branch.find("test-branch-1")
-        test_branch_2 = Branch.find("test-branch-2")
-        test_branch_3 = Branch.find("test-branch-3")
+        test_branch_1 = Branch.new "test-branch-1"
+        test_branch_2 = Branch.new "test-branch-2"
+        test_branch_3 = Branch.new "test-branch-3"
 
         expect(test_branch_1.exists?).to eq true
         expect(test_branch_2.exists?).to eq true
@@ -226,40 +226,40 @@ module Code
 
     describe "#master?" do
       it "returns true if branch name is 'master', false otherwise" do
-        master_branch = Branch.find("master")
+        master_branch = Branch.new "master"
         expect(master_branch.master?).to eq true
 
-        other_branch = Branch.find("other")
+        other_branch = Branch.new "other"
         expect(other_branch.master?).to eq false
       end
     end
 
     describe "#development?" do
       it "returns true if branch name is 'development', false otherwise" do
-        development_branch = Branch.find("development")
+        development_branch = Branch.new "development"
         expect(development_branch.development?).to eq true
 
-        other_branch = Branch.find("other")
+        other_branch = Branch.new "other"
         expect(other_branch.development?).to eq false
       end
     end
 
     describe "#protected?" do
       it "returns true if branch name is in the protected list, false otherwise" do
-        development_branch = Branch.find("development")
+        development_branch = Branch.new "development"
         expect(development_branch.protected?).to eq true
 
-        master_branch = Branch.find("master")
+        master_branch = Branch.new "master"
         expect(master_branch.protected?).to eq true
 
-        other_branch = Branch.find("other")
+        other_branch = Branch.new "other"
         expect(other_branch.protected?).to eq false
       end
     end
 
     describe "#feature?" do
       it "returns the opposite of #protected?" do
-        random_branch = Branch.find("random")
+        random_branch = Branch.new "random"
         expect(random_branch).to receive(:protected?).and_return(true)
         expect(random_branch.feature?).to eq false
         expect(random_branch).to receive(:protected?).and_return(false)
@@ -269,7 +269,7 @@ module Code
 
     describe "#delete!" do
       it "checks if branch is allowed to be deleted" do
-        random_branch = Branch.find("random")
+        random_branch = Branch.new "random"
 
         expect(random_branch).to receive(:authorize_delete!).and_return(true)
         allow(System).to receive(:call)
@@ -278,7 +278,7 @@ module Code
       end
 
       it "makes a system call for 'branch -d branch-name" do
-        random_branch = Branch.find("random")
+        random_branch = Branch.new "random"
         allow(random_branch).to receive(:authorize_delete!).and_return(true)
         expect(System).to receive(:call).with("branch -d random")
 
@@ -286,7 +286,7 @@ module Code
       end
 
       it "allows to change the deletion flag to -D instead of -d" do
-        random_branch = Branch.find("random")
+        random_branch = Branch.new "random"
         allow(random_branch).to receive(:authorize_delete!).and_return(true)
 
         expect(System).to receive(:call).with("branch -D random")
@@ -296,20 +296,20 @@ module Code
       end
 
       it "allows deletion of a feature branch" do
-        random_branch = Branch.find("random")
+        random_branch = Branch.new "random"
         allow(System).to receive(:call)
         expect { random_branch.delete! }.not_to raise_error
       end
 
       it "doesn't allow deletion of a protected branch" do
-        master_branch = Branch.find("master")
+        master_branch = Branch.new "master"
         expect { master_branch.delete! }.to raise_error Branch::ProtectedBranchError
       end
     end
 
     describe "#delete_remote!" do
       it "checks if branch is allowed to be deleted" do
-        random_branch = Branch.find("random")
+        random_branch = Branch.new "random"
 
         expect(random_branch).to receive(:authorize_delete!).and_return(true)
         allow(System).to receive(:call)
@@ -318,7 +318,7 @@ module Code
       end
 
       it "makes a system call for 'push origin :branch-name" do
-        random_branch = Branch.find("random")
+        random_branch = Branch.new "random"
         allow(random_branch).to receive(:authorize_delete!).and_return(true)
         expect(System).to receive(:call).with("push origin :random")
 
@@ -326,20 +326,20 @@ module Code
       end
 
       it "allows deletion of a feature branch" do
-        random_branch = Branch.find("random")
+        random_branch = Branch.new "random"
         allow(System).to receive(:call)
         expect { random_branch.delete_remote! }.not_to raise_error
       end
 
       it "doesn't allow deletion of a protected branch" do
-        master_branch = Branch.find("master")
+        master_branch = Branch.new "master"
         expect { master_branch.delete_remote! }.to raise_error Branch::ProtectedBranchError
       end
     end
 
     describe "#push" do
       it "checks if the branch is public before pushing it" do
-        random_branch = Branch.find("random")
+        random_branch = Branch.new "random"
 
         expect(random_branch).to receive(:ensure_public!).and_return(true)
         allow(System).to receive(:call)
@@ -348,7 +348,7 @@ module Code
       end
 
       it "makes a system call for 'push origin branch-name:branch-name'" do
-        random_branch = Branch.find("random")
+        random_branch = Branch.new "random"
         allow(random_branch).to receive(:ensure_public!).and_return(true)
         expect(System).to receive(:call).with("push origin random:random")
 
@@ -356,20 +356,20 @@ module Code
       end
 
       it "allows pushing of a public branch" do
-        random_branch = Branch.find("random")
+        random_branch = Branch.new "random"
         allow(System).to receive(:call)
         expect { random_branch.push }.not_to raise_error
       end
 
       it "doesn't allow pushing of a private branch" do
-        master_branch = Branch.find("random-local")
+        master_branch = Branch.new "random-local"
         expect { master_branch.push }.to raise_error Branch::PrivateBranchError
       end
     end
 
     describe "#pull" do
       it "makes a system call for 'pull origin branch-name:branch-name'" do
-        random_branch = Branch.find("random")
+        random_branch = Branch.new "random"
         expect(System).to receive(:call).with("pull origin random:random")
         random_branch.pull
       end
@@ -377,13 +377,13 @@ module Code
 
     describe "#checkout" do
       it "makes a system call for 'checkout branch-name'" do
-        random_branch = Branch.find("random")
+        random_branch = Branch.new "random"
         expect(System).to receive(:call).with("checkout random")
         random_branch.checkout
       end
 
       it "returns its own instance" do
-        random_branch = Branch.find("random")
+        random_branch = Branch.new "random"
         allow(System).to receive(:call)
         expect(random_branch.checkout).to eq random_branch
       end
@@ -391,14 +391,14 @@ module Code
 
     describe "#authorize_delete!" do
       it "raises a ProtectedBranchError for protected branches" do
-        random_branch = Branch.find("random")
+        random_branch = Branch.new "random"
 
         expect(random_branch).to receive(:protected?).and_return(true)
         expect { random_branch.authorize_delete!}.to raise_error Branch::ProtectedBranchError
       end
 
       it "doesn't raise an error for unprotected branches" do
-        random_branch = Branch.find("random")
+        random_branch = Branch.new "random"
 
         expect(random_branch).to receive(:protected?).and_return(false)
         expect {random_branch.authorize_delete!}.not_to raise_error
@@ -407,34 +407,34 @@ module Code
 
     describe "#message" do
       it "returns the capitalized branch name, where dashes are replaced with spaces" do
-        random_branch = Branch.find("random")
+        random_branch = Branch.new "random"
         expect(random_branch.message).to eq "Random"
-        random_branch = Branch.find("random-branch")
+        random_branch = Branch.new "random-branch"
         expect(random_branch.message).to eq "Random branch"
       end
     end
 
     describe "#private?" do
       it "returns true if branch name ends with '-local'" do
-        random_branch = Branch.find("random")
+        random_branch = Branch.new "random"
         expect(random_branch.private?).to eq false
-        random_branch = Branch.find("random-local")
+        random_branch = Branch.new "random-local"
         expect(random_branch.private?).to eq true
       end
     end
 
     describe "#hotfix?" do
       it "returns true if branch name starts with 'hotfix-'" do
-        random_branch = Branch.find("random")
+        random_branch = Branch.new "random"
         expect(random_branch.hotfix?).to eq false
-        random_branch = Branch.find("hotfix-random")
+        random_branch = Branch.new "hotfix-random"
         expect(random_branch.hotfix?).to eq true
       end
     end
 
     describe "#has_pull_request?" do
       it "returns true if #pull_request is not nil, false otherwise" do
-        random_branch = Branch.find("random")
+        random_branch = Branch.new "random"
         expect(random_branch).to receive(:pull_request).and_return("something")
         expect(random_branch.has_pull_request?).to eq true
         expect(random_branch).to receive(:pull_request).and_return(nil)
@@ -444,13 +444,13 @@ module Code
 
     describe "#mark_prs_as_awaiting_review" do
       it "calls #label_prs with 'awaiting review'" do
-        random_branch = Branch.find("random")
+        random_branch = Branch.new "random"
         expect(random_branch).to receive(:label_prs).with("awaiting review")
         random_branch.mark_prs_as_awaiting_review
       end
 
       it "throws NoPRError if branch has no pull requests" do
-        random_branch = Branch.find("random")
+        random_branch = Branch.new "random"
         expect(random_branch).to receive(:has_pull_request?).and_return(false)
         expect { random_branch.mark_prs_as_awaiting_review }.to raise_error Branch::NoPRError
       end
@@ -458,13 +458,13 @@ module Code
 
     describe "#mark_prs_as_hotfix" do
       it "calls #label_prs with 'hotfix'" do
-        random_branch = Branch.find("random")
+        random_branch = Branch.new "random"
         expect(random_branch).to receive(:label_prs).with("hotfix")
         random_branch.mark_prs_as_hotfix
       end
 
       it "throws NoPRError if branch has no pull requests" do
-        random_branch = Branch.find("random")
+        random_branch = Branch.new "random"
         expect(random_branch).to receive(:has_pull_request?).and_return(false)
         expect { random_branch.mark_prs_as_hotfix }.to raise_error Branch::NoPRError
       end
@@ -472,14 +472,14 @@ module Code
 
     describe "#pull_request" do
       it "returns the first item in #pull_requests" do
-        random_branch = Branch.find("random")
+        random_branch = Branch.new "random"
 
         expect(random_branch).to receive(:pull_requests).and_return(["first", "second"])
         expect(random_branch.pull_request).to eq "first"
       end
 
       it "returns nil if #pull_requests is empty" do
-        random_branch = Branch.find("random")
+        random_branch = Branch.new "random"
 
         expect(random_branch).to receive(:pull_requests).and_return([])
         expect(random_branch.pull_request).to eq nil
@@ -488,8 +488,8 @@ module Code
 
     describe "#pull_requests" do
       it "calls 'PullRequest.for_branch'" do
-        random_branch = Branch.find("random")
-        pull_requests = [ Code::PullRequest.new({}) ]
+        random_branch = Branch.new "random"
+        pull_requests = [ Code::PullRequest.new(pull_request_info: {}) ]
 
         expect(PullRequest).to receive(:for_branch).with(random_branch).and_return(pull_requests)
         expect(random_branch.pull_requests).to eq pull_requests
@@ -498,8 +498,8 @@ module Code
 
     describe "#pull_request_url" do
       it "returns #pull_request.url" do
-        random_branch = Branch.find("random")
-        pull_request = Code::PullRequest.new({ html_url: "example.com" })
+        random_branch = Branch.new "random"
+        pull_request = Code::PullRequest.new(pull_request_info: { html_url: "example.com" })
 
         expect(random_branch).to receive(:pull_request).and_return(pull_request)
         expect(random_branch.pull_request_url).to eq "example.com"
@@ -508,13 +508,13 @@ module Code
 
     describe "#ensure_public!" do
       it "raises error if branch is private" do
-        random_branch = Branch.find("random-local")
+        random_branch = Branch.new "random-local"
 
         expect { random_branch.ensure_public! }.to raise_error Branch::PrivateBranchError
       end
 
       it "raises no error if branch is public" do
-        random_branch = Branch.find("random")
+        random_branch = Branch.new "random"
 
         expect { random_branch.ensure_public! }.not_to raise_error
       end
@@ -522,17 +522,17 @@ module Code
 
     describe "#label_prs" do
       it "rases a NoPRError if there are no PRs" do
-        random_branch = Branch.find("random")
+        random_branch = Branch.new "random"
 
         expect(random_branch).to receive(:has_pull_request?).and_return(false)
         expect { random_branch.send(:label_prs, "label") }.to raise_error Branch::NoPRError
       end
 
       it "calls PullRequest#add_label for each pull_request" do
-        random_branch = Branch.find("random")
+        random_branch = Branch.new "random"
 
-        pull_request_a = Code::PullRequest.new({})
-        pull_request_b = Code::PullRequest.new({})
+        pull_request_a = Code::PullRequest.new(pull_request_info: {})
+        pull_request_b = Code::PullRequest.new(pull_request_info: {})
 
         expect(random_branch).to receive(:pull_requests).and_return([pull_request_a, pull_request_b]).twice
 
