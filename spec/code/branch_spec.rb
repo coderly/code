@@ -336,5 +336,99 @@ module Code
       end
     end
 
+    describe "#push" do
+      it "checks if the branch is public before pushing it" do
+        random_branch = Branch.find("random")
+
+        expect(random_branch).to receive(:ensure_public!).and_return(true)
+        allow(System).to receive(:call)
+
+        random_branch.push
+      end
+
+      it "makes a system call for 'push origin branch-name:branch-name'" do
+        random_branch = Branch.find("random")
+        allow(random_branch).to receive(:ensure_public!).and_return(true)
+        expect(System).to receive(:call).with("push origin random:random")
+
+        random_branch.push
+      end
+
+      it "allows pushing of a public branch" do
+        random_branch = Branch.find("random")
+        allow(System).to receive(:call)
+        expect { random_branch.push }.not_to raise_error
+      end
+
+      it "doesn't allow pushing of a private branch" do
+        master_branch = Branch.find("random-local")
+        expect { master_branch.push }.to raise_error Branch::PrivateBranchError
+      end
+    end
+
+    describe "#pull" do
+      it "makes a system call for 'pull origin branch-name:branch-name'" do
+        random_branch = Branch.find("random")
+        expect(System).to receive(:call).with("pull origin random:random")
+        random_branch.pull
+      end
+    end
+
+    describe "#checkout" do
+      it "makes a system call for 'checkout branch-name'" do
+        random_branch = Branch.find("random")
+        expect(System).to receive(:call).with("checkout random")
+        random_branch.checkout
+      end
+
+      it "returns its own instance" do
+        random_branch = Branch.find("random")
+        allow(System).to receive(:call)
+        expect(random_branch.checkout).to eq random_branch
+      end
+    end
+
+    describe "#authorize_delete!" do
+      it "raises a ProtectedBranchError for protected branches" do
+        random_branch = Branch.find("random")
+
+        expect(random_branch).to receive(:protected?).and_return(true)
+        expect { random_branch.authorize_delete!}.to raise_error Branch::ProtectedBranchError
+      end
+
+      it "doesn't raise an error for unprotected branches" do
+        random_branch = Branch.find("random")
+
+        expect(random_branch).to receive(:protected?).and_return(false)
+        expect {random_branch.authorize_delete!}.not_to raise_error
+      end
+    end
+
+    describe "#message" do
+      it "returns the capitalized branch name, where dashes are replaced with spaces" do
+        random_branch = Branch.find("random")
+        expect(random_branch.message).to eq "Random"
+        random_branch = Branch.find("random-branch")
+        expect(random_branch.message).to eq "Random branch"
+      end
+    end
+
+    describe "#private?" do
+      it "returns true if branch name ends with '-local'" do
+        random_branch = Branch.find("random")
+        expect(random_branch.private?).to eq false
+        random_branch = Branch.find("random-local")
+        expect(random_branch.private?).to eq true
+      end
+    end
+
+    describe "#hotfix?" do
+      it "returns true if branch name starts with 'hotfix-'" do
+        random_branch = Branch.find("random")
+        expect(random_branch.hotfix?).to eq false
+        random_branch = Branch.find("hotfix-random")
+        expect(random_branch.hotfix?).to eq true
+      end
+    end
   end
 end
