@@ -176,7 +176,7 @@ module Code
     private
 
     def label_prs(label)
-      raise NoPRError, "There is no PR for the this branch" unless has_pr?
+      raise NoPRError, "There is no PR for the this branch" unless has_pull_request?
 
       pull_requests.each do |pr|
         pr.add_label(label)
