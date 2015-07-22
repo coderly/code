@@ -41,7 +41,7 @@ command :publish, :pr do |c|
   c.switch [:master], desc: 'Make the pull request based off the master branch'
   c.action do |global_options, options, args|
 
-    $gitHubAPI.ensure_authorized
+    $github_api.ensure_authorized
 
     message = args.join(' ')
 
@@ -67,7 +67,7 @@ end
 desc "Marks the current branch's pr as awaiting review"
 command :ready do |c|
   c.action do |global_options, options, args|
-    $gitHubAPI.ensure_authorized
+    $github_api.ensure_authorized
     Code::Branch.current.mark_prs_as_awaiting_review
   end
 end
@@ -145,7 +145,7 @@ end
 
 pre do |global, command, options, args|
   $git = Code::Git.new
-  $gitHubAPI = Code::GitHubAPI.new
+  $github_api = Code::GitHubAPI.new
   true
 end
 
