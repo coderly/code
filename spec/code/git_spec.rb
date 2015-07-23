@@ -9,7 +9,8 @@ require 'tmpdir'
 module Code
   describe Git do
 
-    let(:git) { Git.new }
+    let(:github_api) { GitHubAPI.new(repository: Git.test_repo_origin) }
+    let(:git) { Git.new(github_api: github_api) }
     let(:repo_path) { @repo_path }
 
     before(:all) do
@@ -21,7 +22,7 @@ module Code
       Git.setup_test_repo
     end
 
-    describe 'current_branch' do
+    describe "current_branch" do
       let(:branch) { git.current_branch }
 
       subject { branch }
@@ -84,7 +85,7 @@ module Code
 
     end
 
-    describe 'search' do
+    describe "search" do
 
       before do
         allow(System).to receive(:open_in_browser)
@@ -93,6 +94,82 @@ module Code
       it 'should call System.open_in_browser with the proper url' do
         expect(System).to receive(:open_in_browser).with('https://github.com/testuser/codegit/find/development')
         git.search
+      end
+    end
+
+    describe "#repo_url" do
+      it "should use the 'git ls-remote' subcommand to get the origin url" do
+        expect(System).to receive(:result).with("git ls-remote --get-url origin").and_call_original
+        expect(git.repo_url "origin").to eq "https:/github.com/testuser/codegit"
+      end
+    end
+
+    describe "#finish" do
+      it "should switch to development, perform a pull and delete the previous branch" do
+        branch = Branch.create("test-branch")
+        development_branch = Branch.create("development")
+        branch.checkout
+
+        expect(System).to receive(:call).with("checkout development").and_call_original
+        expect(System).to receive(:call).with("pull origin development:development")
+        expect(System).to receive(:call).with("branch -d test-branch").and_call_original
+
+        allow(git).to receive(:fetch)
+
+        git.finish
+
+        expect(Branch.exists? "test-branch").to eq false
+      end
+    end
+
+    describe "#publish" do
+      it "should raise an error on a protected branch" do
+        branch = Branch.create("protected")
+        allow(branch).to receive(:protected?).and_return(true)
+        allow(git).to receive(:current_branch).and_return(branch)
+        allow(git).to receive(:uncommitted_changes?).and_return(false)
+
+        expect{ git.publish }.to raise_error Git::NotOnFeatureBranchError
+      end
+
+      it "should raise an error if there are uncommited_changes" do
+        branch = Branch.create("test-branch")
+        allow(git).to receive(:current_branch).and_return(branch)
+        allow(git).to receive(:uncommitted_changes?).and_return(true)
+
+        expect{ git.publish }.to raise_error Git::UncommittedChangesError
+      end
+
+      it "should create a PRs against both development and master for a hotfix branch, then label them" do
+        branch = Branch.create("hotfix-test")
+        allow(git).to receive(:current_branch).and_return(branch)
+        allow(git).to receive(:uncommitted_changes?).and_return(false)
+        allow(git).to receive(:main_repo).and_return("test_org/test_repo")
+        allow(git).to receive(:push)
+
+        allow(System).to receive(:opent_in_browser).twice
+
+        expect(System).to receive(:exec).with("hub pull-request -f \"Hotfix test\" -b test_org/test_repo:development -h test_org/test_repo:hotfix-test").and_return("something")
+        expect(System).to receive(:exec).with("hub pull-request -f \"Hotfix test\" -b test_org/test_repo:master -h test_org/test_repo:hotfix-test").and_return("something")
+        expect(branch).to receive(:mark_prs_as_hotfix)
+
+        git.publish
+      end
+
+      it "should create a PR against development for any other feature branch" do
+        branch = Branch.create("test-feature")
+        allow(git).to receive(:current_branch).and_return(branch)
+        allow(git).to receive(:uncommitted_changes?).and_return(false)
+        allow(git).to receive(:main_repo).and_return("test_org/test_repo")
+        allow(git).to receive(:push)
+
+        allow(System).to receive(:opent_in_browser).twice
+
+        allow(System).to receive(:exec).with("git ls-remote --get-url origin").and_call_original
+        expect(System).to receive(:exec).with("hub pull-request -f \"Test feature\" -b test_org/test_repo:development -h test_org/test_repo:test-feature").and_return("something")
+
+        git.publish
+
       end
     end
 

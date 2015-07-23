@@ -12,6 +12,10 @@ module Code
     UncommittedChangesError = Class.new(StandardError)
     FeatureExistsError = Class.new(StandardError)
 
+    def initialize(github_api: GitHubAPI.new)
+      @github_api = github_api
+    end
+
     def path
       Dir.pwd
     end
@@ -80,6 +84,7 @@ module Code
       raise NotOnFeatureBranchError, 'Must be on a feature branch to publish your code' unless current_branch.feature?
       raise UncommittedChangesError, 'You have uncommitted changes' if uncommitted_changes?
       push
+
       create_prs_for(base, message)
 
     end

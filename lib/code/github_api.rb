@@ -22,7 +22,7 @@ module Code
     end
 
     def pull_requests_for_branch(branch)
-      client = self.octokit_client_instance_from_token
+      client = octokit_client_instance_from_token
       client.pull_requests(current_repo_slug, head: "#{current_organization}:#{branch.name}")
     end
 
