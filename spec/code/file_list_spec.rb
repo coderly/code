@@ -1,10 +1,10 @@
 require "code/file_list"
-require_relative '../support/uses_files'
+require_relative '../support/uses_file_system'
 
 module Code
 
   describe FileList do
-    include UsesFiles
+    include UsesFileSystem
 
 
     describe "#matching" do
