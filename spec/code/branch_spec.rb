@@ -7,47 +7,22 @@ module Code
 
   describe Branch do
 
-    def setup_test_repo(options = {})
-
-      defaults = {
-        name: "test_repo",
-        origins: [],
-        branches: []
-      }
-
-      options = defaults.merge(options)
-
-      repo_path = Dir.mktmpdir(options[:name])
-      Dir.chdir repo_path
-
-      System.call "init"
-      System.call "config user.email \"test@hotmail.com\""
-      System.call "config user.name \"Chuck Norris\""
-      System.exec "touch README"
-      System.call "add -A"
-      System.call "commit -m \"initial commit\""
-
-      options[:origins].each do |origin|
-        System.call "remote add #{origin.name} #{origin.url}"
-      end
-
-      options[:branches].each do |branch|
-        System.call "branch #{branch}"
-      end
-    end
-
-    def checkout_branch(name)
-      System.call("checkout #{name}")
+    before(:all) do
+      Branch.send :include, GitExtras
     end
 
     before do
       allow(System).to receive(:puts)
+      Branch.setup_test_repo
     end
 
     describe "self.all_names" do
-      it "returns names of all branches in the repo as strings" do
-        setup_test_repo(name: "test_repo", branches: ["test-branch-1", "test-branch-2"])
 
+      before do
+        Branch.add_branches(["test-branch-1", "test-branch-2"])
+      end
+
+      it "returns names of all branches in the repo as strings" do
         branch_names = Branch.all_names
 
         expect(branch_names.length).to eq 3
@@ -58,8 +33,12 @@ module Code
     end
 
     describe "self.all" do
+
+      before do
+        Branch.add_branches(["test-branch-1", "test-branch-2"])
+      end
+
       it "returns Branch instances for all branches in the repo" do
-        setup_test_repo(name: "test_repo", branches: ["test-branch-1", "test-branch-2"])
 
         branches = Branch.all
 
@@ -85,23 +64,24 @@ module Code
     end
 
     describe "self.matching" do
-      it "finds the branch matching the patterns" do
-        setup_test_repo(name: "test_repo", branches: ["test-branch-1"])
 
-        expect(Branch.matching('test', 'branch', '1').name).to eq 'test-branch-1'
+      before do
+        Branch.add_branches(["test-branch-1", "test-branch-2"])
       end
 
       it "returns the first branch that matches the patterns" do
-        setup_test_repo(name: "test_repo", branches: ["test-branch-1", "test-branch-2"])
-
         expect(Branch.matching('test', 'branch').name).to eq 'test-branch-1'
+        expect(Branch.matching('test', '2').name).to eq 'test-branch-2'
       end
     end
 
     describe "self.exists?" do
-      it "returns true for a localy known branch, false otherwise" do
-        setup_test_repo(name: "test_repo", branches: ["test-branch-1", "test-branch-2"])
 
+      before do
+        Branch.add_branches(["test-branch-1", "test-branch-2"])
+      end
+
+      it "returns true for a localy known branch, false otherwise" do
         expect(Branch.exists? "master").to eq true
         expect(Branch.exists? "test-branch-1").to eq true
         expect(Branch.exists? "test-branch-2").to eq true
@@ -109,21 +89,63 @@ module Code
       end
     end
 
-    #TODO: "self.merged"
-
     describe "self.current" do
-      it "returns a Branch instance for the current git branch" do
-        setup_test_repo(name: "test_repo", branches: ["test-branch-1", "test-branch-2"])
+      let(:branch) { Branch.current }
 
-        current_branch = Branch.current
-        expect(current_branch).to be_a Branch
-        expect(current_branch.name).to eq "master"
+      subject { branch }
 
-        checkout_branch "test-branch-1"
+      it "should currently be on the master branch" do
+        expect(branch.name).to eq 'master'
+      end
 
-        current_branch = Branch.current
-        expect(current_branch).to be_a Branch
-        expect(current_branch.name).to eq "test-branch-1"
+      context "when creating a new branch" do
+
+        before do
+          Branch.create "test_branch"
+        end
+
+        it "should have the right branches" do
+          expect(Branch.all.count).to eq 2
+        end
+
+        it "should have created the branch" do
+          expect(Branch.new("test_branch")).to exist
+        end
+
+        context "when deleting a branch" do
+          before do
+            Branch.matching("test_branch").delete!
+          end
+
+          it "should only have one branch left" do
+            expect(Branch.all.count).to eq 1
+          end
+
+          it "should have deleted the branch" do
+            expect(Branch.new("test_branch")).to_not exist
+          end
+        end
+
+        context "when checking out a branch" do
+          before do
+            Branch.matching('test_branch').checkout
+          end
+
+          it "should have changed the branch" do
+            expect(Branch.current.name).to eq 'test_branch'
+          end
+        end
+      end
+
+      context "when trying to delete a protected branch" do
+
+        before do
+          Branch.create "development"
+        end
+
+        it "should now be allowed" do
+          expect { Branch.matching("development").delete! }.to raise_error Branch::ProtectedBranchError
+        end
       end
     end
 
@@ -200,6 +222,10 @@ module Code
 
     describe "#exists" do
 
+      before do
+        Branch.add_branches(["test-branch-1", "test-branch-2"])
+      end
+
       it "calls System.result and returns the result" do
         test_branch_1 = Branch.new "test-branch-1"
 
@@ -212,8 +238,6 @@ module Code
       end
 
       it "returns true if the branch with the provided instance name exists in the git repo" do
-        setup_test_repo(name: "test_repo", branches: ["test-branch-1", "test-branch-2"])
-
         test_branch_1 = Branch.new "test-branch-1"
         test_branch_2 = Branch.new "test-branch-2"
         test_branch_3 = Branch.new "test-branch-3"
@@ -540,7 +564,6 @@ module Code
         expect(pull_request_b).to receive(:add_label).with("label")
 
         expect { random_branch.send(:label_prs, "label") }.not_to raise_error
-
       end
     end
   end

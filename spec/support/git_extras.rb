@@ -21,6 +21,16 @@ module Code
         System.call 'commit -m "initial commit"'
         System.call "remote add origin #{test_repo_origin}"
       end
+
+      def checkout_branch(name)
+        System.call "checkout #{name}"
+      end
+
+      def add_branches(names)
+        names.each do |name|
+          System.call "branch #{name}"
+        end
+      end
     end
 
     def self.included(base)
