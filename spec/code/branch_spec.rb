@@ -3,8 +3,6 @@ require "code/system"
 require "code/pull_request"
 
 module Code
-
-
   describe Branch do
 
     before(:all) do
