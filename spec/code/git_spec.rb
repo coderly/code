@@ -132,7 +132,7 @@ module Code
       end
 
       it "should raise error if no matching branch was found" do
-        expect{ git.switch("some") }.to raise_error
+        expect{ git.switch("some") }.to raise_error Git::BranchDoesntExistError
       end
     end
 

@@ -10,6 +10,7 @@ module Code
     NotOnFeatureBranchError = Class.new(StandardError)
     UncommittedChangesError = Class.new(StandardError)
     FeatureExistsError = Class.new(StandardError)
+    BranchDoesntExistError = Class.new(StandardError)
 
     def initialize()
     end
@@ -38,7 +39,9 @@ module Code
     end
 
     def switch(*patterns)
-      Branch.matching(*patterns).checkout
+      branch = Branch.matching(*patterns)
+      raise BranchDoesntExistError if !branch
+      branch.checkout
     end
 
     def cancel
