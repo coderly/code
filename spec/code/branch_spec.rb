@@ -52,17 +52,6 @@ module Code
       end
     end
 
-    describe "self.coerce_patterns" do
-      it "returns an array consisting of provided patterns" do
-        patterns = Branch.coerce_patterns 'abc', 'def', '123'
-
-        expect(patterns.length).to eq 3
-        expect(patterns[0]).to eq 'abc'
-        expect(patterns[1]).to eq 'def'
-        expect(patterns[2]).to eq '123'
-      end
-    end
-
     describe "self.matching" do
 
       before do
@@ -180,7 +169,7 @@ module Code
 
     describe "self.find" do
       it "creates a new Branch instance with specified name, but makes no System.call" do
-        expect(System).not_to receive(:call)
+        expect(System).not_to receive(:call).with("branch test_branch")
 
         branch = Branch.find "test_branch"
 
@@ -189,7 +178,7 @@ module Code
       end
     end
 
-    describe "#==" do
+    describe "equality comparer" do
       it "compares by branch name" do
         branch_a = Branch.new "branch-a"
         branch_b = Branch.new "branch-b"
@@ -362,15 +351,6 @@ module Code
     end
 
     describe "#push" do
-      it "checks if the branch is public before pushing it" do
-        random_branch = Branch.new "random"
-
-        expect(random_branch).to receive(:ensure_public!).and_return(true)
-        allow(System).to receive(:call)
-
-        random_branch.push
-      end
-
       it "makes a system call for 'push origin branch-name:branch-name'" do
         random_branch = Branch.new "random"
         allow(random_branch).to receive(:ensure_public!).and_return(true)
@@ -381,7 +361,7 @@ module Code
 
       it "allows pushing of a public branch" do
         random_branch = Branch.new "random"
-        allow(System).to receive(:call)
+        allow(System).to receive(:call).with("push origin random:random")
         expect { random_branch.push }.not_to raise_error
       end
 
@@ -413,22 +393,6 @@ module Code
       end
     end
 
-    describe "#authorize_delete!" do
-      it "raises a ProtectedBranchError for protected branches" do
-        random_branch = Branch.new "random"
-
-        expect(random_branch).to receive(:protected?).and_return(true)
-        expect { random_branch.authorize_delete!}.to raise_error Branch::ProtectedBranchError
-      end
-
-      it "doesn't raise an error for unprotected branches" do
-        random_branch = Branch.new "random"
-
-        expect(random_branch).to receive(:protected?).and_return(false)
-        expect {random_branch.authorize_delete!}.not_to raise_error
-      end
-    end
-
     describe "#message" do
       it "returns the capitalized branch name, where dashes are replaced with spaces" do
         random_branch = Branch.new "random"
@@ -457,12 +421,17 @@ module Code
     end
 
     describe "#has_pull_request?" do
-      it "returns true if #pull_request is not nil, false otherwise" do
-        random_branch = Branch.new "random"
-        expect(random_branch).to receive(:pull_request).and_return("something")
-        expect(random_branch.has_pull_request?).to eq true
-        expect(random_branch).to receive(:pull_request).and_return(nil)
-        expect(random_branch.has_pull_request?).to eq false
+      it "returns true if the branch has any pull requests, false otherwise" do
+        random_branch_1 = Branch.new "random_1"
+        pull_request_1 = PullRequest.new(pull_request_info: { html_url: "example.com" })
+        pull_request_2 = PullRequest.new(pull_request_info: { html_url: "example2.com" })
+
+        expect(PullRequest).to receive(:for_branch).with(random_branch_1).and_return([pull_request_1, pull_request_2])
+        expect(random_branch_1.has_pull_request?).to eq true
+
+        random_branch_2 = Branch.new "random_2"
+        expect(PullRequest).to receive(:for_branch).with(random_branch_2).and_return([])
+        expect(random_branch_2.has_pull_request?).to eq false
       end
     end
 
@@ -494,76 +463,15 @@ module Code
       end
     end
 
-    describe "#pull_request" do
-      it "returns the first item in #pull_requests" do
-        random_branch = Branch.new "random"
-
-        expect(random_branch).to receive(:pull_requests).and_return(["first", "second"])
-        expect(random_branch.pull_request).to eq "first"
-      end
-
-      it "returns nil if #pull_requests is empty" do
-        random_branch = Branch.new "random"
-
-        expect(random_branch).to receive(:pull_requests).and_return([])
-        expect(random_branch.pull_request).to eq nil
-      end
-    end
-
-    describe "#pull_requests" do
-      it "calls 'PullRequest.for_branch'" do
-        random_branch = Branch.new "random"
-        pull_requests = [ Code::PullRequest.new(pull_request_info: {}) ]
-
-        expect(PullRequest).to receive(:for_branch).with(random_branch).and_return(pull_requests)
-        expect(random_branch.pull_requests).to eq pull_requests
-      end
-    end
-
     describe "#pull_request_url" do
-      it "returns #pull_request.url" do
+      it "returns the URL of the first pull request" do
         random_branch = Branch.new "random"
-        pull_request = Code::PullRequest.new(pull_request_info: { html_url: "example.com" })
+        pull_request_1 = PullRequest.new(pull_request_info: { html_url: "example.com" })
+        pull_request_2 = PullRequest.new(pull_request_info: { html_url: "example2.com" })
 
-        expect(random_branch).to receive(:pull_request).and_return(pull_request)
+        expect(PullRequest).to receive(:for_branch).and_return([pull_request_1, pull_request_2])
+
         expect(random_branch.pull_request_url).to eq "example.com"
-      end
-    end
-
-    describe "#ensure_public!" do
-      it "raises error if branch is private" do
-        random_branch = Branch.new "random-local"
-
-        expect { random_branch.ensure_public! }.to raise_error Branch::PrivateBranchError
-      end
-
-      it "raises no error if branch is public" do
-        random_branch = Branch.new "random"
-
-        expect { random_branch.ensure_public! }.not_to raise_error
-      end
-    end
-
-    describe "#label_prs" do
-      it "rases a NoPRError if there are no PRs" do
-        random_branch = Branch.new "random"
-
-        expect(random_branch).to receive(:has_pull_request?).and_return(false)
-        expect { random_branch.send(:label_prs, "label") }.to raise_error Branch::NoPRError
-      end
-
-      it "calls PullRequest#add_label for each pull_request" do
-        random_branch = Branch.new "random"
-
-        pull_request_a = Code::PullRequest.new(pull_request_info: {})
-        pull_request_b = Code::PullRequest.new(pull_request_info: {})
-
-        expect(random_branch).to receive(:pull_requests).and_return([pull_request_a, pull_request_b]).twice
-
-        expect(pull_request_a).to receive(:add_label).with("label")
-        expect(pull_request_b).to receive(:add_label).with("label")
-
-        expect { random_branch.send(:label_prs, "label") }.not_to raise_error
       end
     end
   end
