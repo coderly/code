@@ -104,6 +104,59 @@ module Code
       end
     end
 
+    describe "#start" do
+      it "should raise an error if branch already exists" do
+        existing_branch = Branch.create "existing-branch"
+
+        expect{ git.start "existing-branch" }.to raise_error Git::FeatureExistsError
+      end
+
+      it "should checkout the development branch, pull it, then create and switch to a new branch" do
+        expect(System).to receive(:call).with("checkout development")
+        expect(System).to receive(:call).with("pull origin development:development")
+        expect(System).to receive(:call).with("branch new-feature")
+        expect(System).to receive(:call).with("checkout new-feature")
+
+        git.start "new-feature"
+      end
+
+      it "should not checkout the development branch if already on it" do
+        dev_branch = Branch.create "development"
+        allow(git).to receive(:current_branch).and_return(dev_branch)
+        expect(System).not_to receive(:call).with("checkout development")
+
+        git.start "new-feature"
+      end
+    end
+
+    describe "#hotfix" do
+      it "should raise an error if branch already exists" do
+        existing_branch = Branch.create "hotfix-branch"
+
+        expect{ git.hotfix "branch" }.to raise_error Git::FeatureExistsError
+      end
+
+      it "should checkout the master branch, pull it, then create and switch to a new branch" do
+        some_other_branch = Branch.create "random-branch"
+
+        allow(git).to receive(:current_branch).and_return(some_other_branch)
+
+        expect(System).to receive(:call).with("checkout master")
+        expect(System).to receive(:call).with("pull origin master:master")
+        expect(System).to receive(:call).with("branch hotfix-branch")
+        expect(System).to receive(:call).with("checkout hotfix-branch")
+
+        git.hotfix "branch"
+      end
+
+      it "should not checkout the master branch if already on it" do
+        # NOTE: the default git repo is on "master" branch to begin
+        expect(System).not_to receive(:call).with("checkout master")
+
+        git.hotfix "branch"
+      end
+    end
+
     describe "#finish" do
       it "should switch to development, perform a pull and delete the previous branch" do
         branch = Branch.create("test-branch")
@@ -112,13 +165,11 @@ module Code
 
         expect(System).to receive(:call).with("checkout development").and_call_original
         expect(System).to receive(:call).with("pull origin development:development")
-        expect(System).to receive(:call).with("branch -d test-branch").and_call_original
+        expect(System).to receive(:call).with("branch -d test-branch")
 
         allow(git).to receive(:fetch)
 
         git.finish
-
-        expect(Branch.exists? "test-branch").to eq false
       end
     end
 
