@@ -2,7 +2,6 @@ require 'uri'
 
 require 'code/branch'
 require 'code/system'
-require 'code/github_api'
 
 module Code
 
@@ -12,12 +11,7 @@ module Code
     UncommittedChangesError = Class.new(StandardError)
     FeatureExistsError = Class.new(StandardError)
 
-    def initialize(github_api: GitHubAPI.new)
-      @github_api = github_api
-    end
-
-    def path
-      Dir.pwd
+    def initialize()
     end
 
     def start(feature)
@@ -28,24 +22,6 @@ module Code
         development_branch.pull
 
         Branch.create(feature).checkout
-      end
-    end
-
-    def stash
-      System.call('stash')
-    end
-
-    def unstash
-      System.call('stash pop')
-    end
-
-    def with_stash
-      if uncommitted_changes?
-        stash
-        yield
-        unstash
-      else
-        yield
       end
     end
 
@@ -75,6 +51,7 @@ module Code
       end
     end
 
+    # NOT used anywhere at the moment. Did we loose track of a supported command?
     def commit(message)
       System.call 'add -A'
       System.call "commit -m \"#{message}\""
@@ -84,46 +61,7 @@ module Code
       raise NotOnFeatureBranchError, 'Must be on a feature branch to publish your code' unless current_branch.feature?
       raise UncommittedChangesError, 'You have uncommitted changes' if uncommitted_changes?
       push
-
       create_prs_for(base, message)
-
-    end
-
-    def push
-      current_branch.push
-    end
-
-    def pull_request(base:, message: '')
-      base = development_branch unless base
-      message = current_branch.message if message.empty?
-      command = "hub pull-request -f \"#{message}\" -b #{main_repo}:#{base} -h #{main_repo}:#{current_branch}"
-      System.exec(command).strip
-    end
-
-    def create_prs_for(base, message)
-      if current_branch.hotfix?
-        create_hotfix_prs(message)
-      else
-        create_feature_pr(base, message)
-      end
-    end
-
-    def search
-      System.open_in_browser "https://github.com/#{current_repo_slug}/find/development"
-    end
-
-    def create_feature_pr(base, message)
-      System.open_in_browser pull_request(base: base, message: message)
-    end
-
-    def create_hotfix_prs(message)
-      System.open_in_browser pull_request(base: master_branch, message: message)
-      System.open_in_browser pull_request(base: development_branch, message: message)
-      current_branch.mark_prs_as_hotfix
-    end
-
-    def compare_in_browser(branch)
-      System.exec "hub compare #{branch}"
     end
 
     def finish
@@ -134,6 +72,68 @@ module Code
       development_branch.pull
 
       branch.delete!
+    end
+
+    def push
+      current_branch.push
+    end
+
+    def search
+      System.open_in_browser "https://github.com/#{current_repo_slug}/find/development"
+    end
+
+    # NOT used anywhere at the moment. Did we loose track of a supported command?
+    def compare_in_browser(branch)
+      System.exec "hub compare #{branch}"
+    end
+
+    def prune_remote_branches
+      System.call 'remote prune origin'
+    end
+
+    private
+
+    def stash
+      System.call('stash')
+    end
+
+    def unstash
+      System.call('stash pop')
+    end
+
+    def with_stash
+      if uncommitted_changes?
+        stash
+        yield
+        unstash
+      else
+        yield
+      end
+    end
+
+    def create_prs_for(base, message)
+      if current_branch.hotfix?
+        create_hotfix_prs(message)
+      else
+        create_feature_pr(base, message)
+      end
+    end
+
+    def pull_request(base:, message: '')
+      base = development_branch unless base
+      message = current_branch.message if message.empty?
+      command = "hub pull-request -f \"#{message}\" -b #{main_repo}:#{base} -h #{main_repo}:#{current_branch}"
+      System.exec(command).strip
+    end
+
+    def create_feature_pr(base, message)
+      System.open_in_browser pull_request(base: base, message: message)
+    end
+
+    def create_hotfix_prs(message)
+      System.open_in_browser pull_request(base: master_branch, message: message)
+      System.open_in_browser pull_request(base: development_branch, message: message)
+      current_branch.mark_prs_as_hotfix
     end
 
     def uncommitted_changes?
@@ -160,10 +160,6 @@ module Code
       Branch.master
     end
 
-    def prune_remote_branches
-      System.call 'remote prune origin'
-    end
-
     def main_repo
       main_repo_url[/:(\w+)\//,1]
     end
@@ -174,10 +170,6 @@ module Code
 
     def repo_url(name)
       System.result("git ls-remote --get-url #{name}")
-    end
-
-    def github_api
-      @github_api ||= GitHubAPI.new
     end
 
     def current_repo_slug
