@@ -255,4 +255,84 @@ module Code
       end
     end
   end
+
+  describe "user prompts" do
+    let(:git) { Git.new }
+
+    before(:all) do
+      Git.send :include, GitExtras
+    end
+
+    before do
+      allow(System).to receive(:puts)
+      Git.setup_test_repo
+    end
+
+    it "should be made during call to #start to get the name of the development branch" do
+      expect(Config).to receive(:get_development_branch_name).exactly(3).times.and_return "test"
+
+      allow(System).to receive(:call).with("checkout test")
+      allow(System).to receive(:call).with("pull origin test:test")
+      allow(System).to receive(:call).with("branch new-feature")
+      allow(System).to receive(:call).with("checkout new-feature")
+
+      git.start "new-feature"
+    end
+
+    it "should be made during call to #hotfix to get the name of the master branch" do
+      expect(Config).to receive(:get_master_branch_name).exactly(3).times.and_return "test"
+
+      allow(System).to receive(:call).with("checkout test")
+      allow(System).to receive(:call).with("pull origin test:test")
+      allow(System).to receive(:call).with("branch hotfix-branch")
+      allow(System).to receive(:call).with("checkout hotfix-branch")
+
+      git.hotfix "branch"
+    end
+
+    it "should be made during call to #cancel to get the name of the development_branch" do
+      expect(Config).to receive(:get_development_branch_name).exactly(2).times.and_return "test"
+
+      dev_branch = Branch.create "test"
+      allow(git).to receive(:current_branch).and_return(dev_branch)
+      allow(STDOUT).to receive(:puts).with("Nothing to cancel (already on test)")
+
+      git.cancel
+    end
+
+    it "should be made during call to #publish to get the names of master and development branches" do
+      expect(Config).to receive(:get_development_branch_name).exactly(2).times.and_return "test"
+      expect(Config).to receive(:get_master_branch_name).times.and_return "test"
+
+      branch = Branch.create("test-feature")
+      allow(git).to receive(:current_branch).and_return(branch)
+      allow(git).to receive(:uncommitted_changes?).and_return(false)
+      allow(git).to receive(:main_repo).and_return("test_org/test_repo")
+      allow(git).to receive(:push)
+
+      allow(System).to receive(:open_in_browser).twice
+
+      allow(System).to receive(:exec).with("git ls-remote --get-url origin").and_call_original
+      allow(System).to receive(:exec).with("hub pull-request -f \"Test feature\" -b test_org/test_repo:test -h test_org/test_repo:test-feature").and_return("something")
+
+      git.publish
+    end
+
+    it "should be made during call to #finish, to get the name of the development_branch" do
+      expect(Config).to receive(:get_development_branch_name).exactly(3).times.and_return "dev-test"
+      expect(Config).to receive(:get_master_branch_name).times.and_return "master-test"
+
+      branch = Branch.new("test-branch")
+      allow(git).to receive(:current_branch).and_return(branch)
+
+      allow(System).to receive(:call).with("checkout dev-test")
+      allow(System).to receive(:call).with("pull origin dev-test:dev-test")
+      allow(System).to receive(:call).with("branch -d test-branch")
+
+      allow(git).to receive(:fetch)
+
+      git.finish
+      end
+
+  end
 end
