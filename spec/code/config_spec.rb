@@ -42,7 +42,7 @@ module Code
         end
 
         context "when config property does exist" do
-          with_file_and_content(".codeconfig", "property = value")
+          with_file_and_content(".codeconfig", "property = value\n")
 
           it "should not prompt the user for the property value" do
             expect(System).not_to receive(:prompt)
@@ -54,7 +54,80 @@ module Code
           end
         end
       end
+    end
 
+    describe "get_master_branch_name" do
+      context "when there is no previously stored property value" do
+        with_file_and_content(".codeconfig", "")
+        let(:prompt_text) { "You didn't set the name of the master branch. What is it ('master')?" }
+
+        it "asks the user for the property value" do
+          expect(System).to receive(:prompt).with prompt_text
+          Config.get_master_branch_name
+        end
+
+        it "should return the value the user has provided" do
+          allow(System).to receive(:prompt).with(prompt_text).and_return("test-value")
+
+          expect(Config.get_master_branch_name).to eq ("test-value")
+        end
+
+        it "should store the provided value into the file" do
+          allow(System).to receive(:prompt).with(prompt_text).and_return("test-value")
+          Config.get_master_branch_name
+          file_content = File.read ".codeconfig"
+          expect(file_content.strip).to eq "master_branch = \"test-value\""
+        end
+      end
+
+      context "when there is a previously stored property value" do
+        with_file_and_content(".codeconfig", "master_branch = \"value\"\n")
+          it "should not prompt the user for the property value" do
+            expect(System).not_to receive(:prompt)
+            Config.get_master_branch_name
+          end
+
+          it "should return the stored property value" do
+            expect(Config.get_master_branch_name).to eq "value"
+          end
+      end
+    end
+
+    describe "get_development_branch_name" do
+      context "when there is no previously stored property value" do
+        with_file_and_content(".codeconfig", "")
+        let(:prompt_text) { "You didn't set the name of the development branch. What is it ('development')?" }
+
+        it "asks the user for the property value" do
+          expect(System).to receive(:prompt).with prompt_text
+          Config.get_development_branch_name
+        end
+
+        it "should return the value the user has provided" do
+          allow(System).to receive(:prompt).with(prompt_text).and_return("test-value")
+
+          expect(Config.get_development_branch_name).to eq ("test-value")
+        end
+
+        it "should store the provided value into the file" do
+          allow(System).to receive(:prompt).with(prompt_text).and_return("test-value")
+          Config.get_development_branch_name
+          file_content = File.read ".codeconfig"
+          expect(file_content.strip).to eq "development_branch = \"test-value\""
+        end
+      end
+
+      context "when there is a previously stored property value" do
+        with_file_and_content(".codeconfig", "development_branch = \"value\"\n")
+          it "should not prompt the user for the property value" do
+            expect(System).not_to receive(:prompt)
+            Config.get_development_branch_name
+          end
+
+          it "should return the stored property value" do
+            expect(Config.get_development_branch_name).to eq "value"
+          end
+      end
     end
   end
 end

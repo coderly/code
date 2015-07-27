@@ -8,11 +8,6 @@ module Code
     PrivateBranchError = Class.new(StandardError)
     NoPRError = Class.new(StandardError)
 
-
-    MASTER_BRANCH_NAME = 'master'
-    DEVELOPMENT_BRANCH_NAME = 'development'
-    PROTECTED_BRANCH_NAMES = %w{master development}
-
     def self.all_names
       System.result('git branch').strip.lines.map { |line| line.gsub(/\s|\*/, '') }
     end
@@ -53,11 +48,11 @@ module Code
     end
 
     def self.development
-      new DEVELOPMENT_BRANCH_NAME
+      new Config.get_development_branch_name
     end
 
     def self.master
-      new MASTER_BRANCH_NAME
+      new Config.get_master_branch_name
     end
 
     def self.create(branch_name)
@@ -86,15 +81,18 @@ module Code
     end
 
     def development?
-      name == DEVELOPMENT_BRANCH_NAME
+      name == Config.get_development_branch_name
     end
 
     def master?
-      name == MASTER_BRANCH_NAME
+      name == Config.get_master_branch_name
     end
 
     def protected?
-      PROTECTED_BRANCH_NAMES.include? name
+      master_branch_name = Config.get_master_branch_name
+      development_branch_name = Config.get_development_branch_name
+      protected_branch_names = [ master_branch_name, development_branch_name ]
+      protected_branch_names.include? name
     end
 
     def feature?
@@ -149,7 +147,7 @@ module Code
     end
 
     def mark_prs_as_hotfix
-      label_prs('hotfix')
+      label_prs("hotfix")
     end
 
     def pull_request_url

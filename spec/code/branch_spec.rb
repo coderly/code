@@ -1,6 +1,7 @@
 require "code/branch"
 require "code/system"
 require "code/pull_request"
+require "code/config"
 
 module Code
   describe Branch do
@@ -10,6 +11,8 @@ module Code
     end
 
     before do
+      allow(Config).to receive(:get_master_branch_name).and_return "master"
+      allow(Config).to receive(:get_development_branch_name).and_return "development"
       allow(System).to receive(:puts)
       Branch.setup_test_repo
     end

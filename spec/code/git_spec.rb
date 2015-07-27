@@ -1,6 +1,7 @@
 require 'code/git'
 require 'code/branch'
 require 'code/system'
+require "code/config"
 
 require_relative '../support/git_extras'
 
@@ -17,6 +18,9 @@ module Code
     end
 
     before do
+      allow(Config).to receive(:get_master_branch_name).and_return "master"
+      allow(Config).to receive(:get_development_branch_name).and_return "development"
+
       allow(System).to receive(:puts)
       Git.setup_test_repo
     end
