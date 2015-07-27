@@ -4,6 +4,11 @@ module Code
   module GitExtras
 
     module ClassMethods
+
+      def test_repo_origin
+        "https:/github.com/testuser/codegit"
+      end
+
       def setup_test_repo
         repo_path = Dir.mktmpdir('codegit')
         Dir.chdir repo_path
@@ -14,7 +19,17 @@ module Code
         System.exec 'touch README'
         System.call 'add -A'
         System.call 'commit -m "initial commit"'
-        System.call 'remote add origin https:/github.com/testuser/codegit'
+        System.call "remote add origin #{test_repo_origin}"
+      end
+
+      def checkout_branch(name)
+        System.call "checkout #{name}"
+      end
+
+      def add_branches(names)
+        names.each do |name|
+          System.call "branch #{name}"
+        end
       end
     end
 
