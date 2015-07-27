@@ -1,4 +1,5 @@
-require 'code/pull_request'
+require "code/pull_request"
+require "code/config"
 
 module Code
 
