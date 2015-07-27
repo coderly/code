@@ -181,8 +181,6 @@ module Code
         allow(git).to receive(:main_repo).and_return("test_org/test_repo")
         allow(git).to receive(:push)
 
-        allow(System).to receive(:opent_in_browser).twice
-
         expect(System).to receive(:exec).with("hub pull-request -f \"Hotfix test\" -b test_org/test_repo:development -h test_org/test_repo:hotfix-test").and_return("something")
         expect(System).to receive(:exec).with("hub pull-request -f \"Hotfix test\" -b test_org/test_repo:master -h test_org/test_repo:hotfix-test").and_return("something")
         expect(branch).to receive(:mark_prs_as_hotfix)
@@ -196,8 +194,6 @@ module Code
         allow(git).to receive(:uncommitted_changes?).and_return(false)
         allow(git).to receive(:main_repo).and_return("test_org/test_repo")
         allow(git).to receive(:push)
-
-        allow(System).to receive(:opent_in_browser).twice
 
         allow(System).to receive(:exec).with("git ls-remote --get-url origin").and_call_original
         expect(System).to receive(:exec).with("hub pull-request -f \"Test feature\" -b test_org/test_repo:development -h test_org/test_repo:test-feature").and_return("something")
@@ -310,8 +306,6 @@ module Code
       allow(git).to receive(:main_repo).and_return("test_org/test_repo")
       allow(git).to receive(:push)
 
-      allow(System).to receive(:open_in_browser).twice
-
       allow(System).to receive(:exec).with("git ls-remote --get-url origin").and_call_original
       allow(System).to receive(:exec).with("hub pull-request -f \"Test feature\" -b test_org/test_repo:test -h test_org/test_repo:test-feature").and_return("something")
 
@@ -333,6 +327,5 @@ module Code
 
       git.finish
       end
-
   end
 end
