@@ -1,9 +1,26 @@
 require 'code/repository'
+require_relative '../support/git_extras'
 
 module Code
   describe Repository do
 
-    describe '#organization' do
+    describe "self.current" do
+      before(:all) do
+        Repository.send :include, GitExtras
+      end
+
+      before do
+        allow(System).to receive(:puts)
+        Repository.setup_test_repo
+      end
+
+      it "returns a Repository instance from the URL of the current origin remote" do
+        current_repo = Repository.current
+        expect(current_repo.slug).to eq "testuser/codegit"
+      end
+    end
+
+    describe "#organization" do
       it "works with 'https://' format repository urls" do
         repo = Repository.new(url: "https:/github.com/test_org/test_name.git")
         expect(repo.organization).to eq "test_org"
@@ -20,7 +37,7 @@ module Code
       end
     end
 
-    describe '#name' do
+    describe "#name" do
       it "works with 'https://' format repository urls" do
         repo = Repository.new(url: "https:/github.com/test_org/test_name.git")
         expect(repo.name).to eq "test_name"
@@ -37,7 +54,7 @@ module Code
       end
     end
 
-    describe '#slug' do
+    describe "#slug" do
       it "works with 'https://' format repository urls" do
         repo = Repository.new(url: "https:/github.com/test_org/test_name.git")
         expect(repo.slug).to eq "test_org/test_name"

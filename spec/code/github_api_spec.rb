@@ -4,7 +4,7 @@ module Code
   describe GitHubAPI do
     let(:api) { GitHubAPI.new }
 
-    describe '#ensure_authorized' do
+    describe "#ensure_authorized" do
 
       context 'when system is authorized' do
         before do
@@ -32,6 +32,15 @@ module Code
 
           api.ensure_authorized
         end
+      end
+    end
+
+    describe "#authorize" do
+      it "creates a client instance, uses it to create a token and stores it" do
+        expect(api).to receive(:octokit_client_instance_from_basic_auth).with(username: "test_user", password: "test_pass").and_return("something")
+        expect(api).to receive(:create_token).with("something").and_return("token")
+        expect(System).to receive(:result).with("git config --global oauth.token token")
+        api.send(:authorize, username: "test_user", password: "test_pass")
       end
     end
   end

@@ -3,13 +3,14 @@ require 'code/github_api'
 module Code
   class PullRequest
 
-    def initialize(pull_request_info)
+    def initialize(pull_request_info:, github_api: GitHubAPI.new)
       @pull_request_info = pull_request_info
+      @github_api = github_api
     end
 
     def self.for_branch(branch)
       fetch_pull_requests_for_branch(branch).map do |pull_request_info|
-        new(pull_request_info)
+        new(pull_request_info: pull_request_info)
       end
     end
 
@@ -27,11 +28,11 @@ module Code
 
     private
 
-    attr_reader :pull_request_info
-
     def github_api
       @github_api ||= GitHubAPI.new
     end
+
+    attr_reader :pull_request_info
 
     def self.fetch_pull_requests_for_branch(branch)
       github_api.pull_requests_for_branch(branch)

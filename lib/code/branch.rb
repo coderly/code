@@ -13,7 +13,6 @@ module Code
     DEVELOPMENT_BRANCH_NAME = 'development'
     PROTECTED_BRANCH_NAMES = %w{master development}
 
-
     def self.all_names
       System.result('git branch').strip.lines.map { |line| line.gsub(/\s|\*/, '') }
     end
@@ -22,9 +21,14 @@ module Code
       all_names.map { |name| new(name) }
     end
 
+
+    # TODO: This should probably be moved to another class or module.
+    # An identical method is used in match_scorer/base
     def self.coerce_patterns(*patterns)
       patterns.flatten.join(' ').split(' ')
     end
+
+    private_class_method :coerce_patterns
 
     def self.matching(*patterns)
       patterns = coerce_patterns(patterns)
@@ -124,10 +128,6 @@ module Code
       self
     end
 
-    def authorize_delete!
-      raise ProtectedBranchError, "The #{name} branch is protected" if protected?
-    end
-
     def message
       name.gsub('-', ' ').capitalize
     end
@@ -152,22 +152,10 @@ module Code
       label_prs('hotfix')
     end
 
-    def pull_request
-      pull_requests.first
-    end
-
-    def pull_requests
-      @pull_request ||= PullRequest.for_branch(self)
-    end
-
     def pull_request_url
       # This could be a delegate, but it seems easier to read just by
       # calling it.
       pull_request.url
-    end
-
-    def ensure_public!
-      raise PrivateBranchError, "#{name} is a private branch" if private?
     end
 
     attr_reader :name
@@ -176,12 +164,27 @@ module Code
     private
 
     def label_prs(label)
-      raise NoPRError, "There is no PR for the this branch" unless has_pr?
+      raise NoPRError, "There is no PR for the this branch" unless has_pull_request?
 
       pull_requests.each do |pr|
         pr.add_label(label)
       end
     end
 
+    def authorize_delete!
+      raise ProtectedBranchError, "The #{name} branch is protected" if protected?
+    end
+
+    def pull_request
+      pull_requests.first
+    end
+
+    def pull_requests
+      @pull_request ||= PullRequest.for_branch(self)
+    end
+
+    def ensure_public!
+      raise PrivateBranchError, "#{name} is a private branch" if private?
+    end
   end
 end
