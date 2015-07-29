@@ -68,7 +68,7 @@ desc "Marks the current branch's pr as awaiting review"
 command :ready do |c|
   c.action do |global_options, options, args|
     $github_api.ensure_authorized
-    Code::Branch.current.mark_prs_as_awaiting_review
+    Code::Branch.current.mark_prs_as_ready
   end
 end
 

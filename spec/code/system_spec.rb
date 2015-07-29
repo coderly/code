@@ -1,5 +1,4 @@
 require "code/system"
-require "io/console"
 
 module Code
   module System
