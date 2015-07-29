@@ -11,8 +11,9 @@ module Code
     end
 
     before do
-      allow(Config).to receive(:get_master_branch_name).and_return "master"
-      allow(Config).to receive(:get_development_branch_name).and_return "development"
+      allow(Config).to receive(:master_branch_name).and_return "master"
+      allow(Config).to receive(:development_branch_name).and_return "development"
+      allow(Config).to receive(:ready_label).and_return "awaiting review"
       allow(System).to receive(:puts)
       Branch.setup_test_repo
     end
@@ -436,17 +437,17 @@ module Code
       end
     end
 
-    describe "#mark_prs_as_awaiting_review" do
+    describe "#mark_prs_as_ready" do
       it "calls #label_prs with 'awaiting review'" do
         random_branch = Branch.new "random"
         expect(random_branch).to receive(:label_prs).with("awaiting review")
-        random_branch.mark_prs_as_awaiting_review
+        random_branch.mark_prs_as_ready
       end
 
       it "throws NoPRError if branch has no pull requests" do
         random_branch = Branch.new "random"
         expect(random_branch).to receive(:has_pull_request?).and_return(false)
-        expect { random_branch.mark_prs_as_awaiting_review }.to raise_error Branch::NoPRError
+        expect { random_branch.mark_prs_as_ready }.to raise_error Branch::NoPRError
       end
     end
 
@@ -474,6 +475,65 @@ module Code
 
         expect(random_branch.pull_request_url).to eq "example.com"
       end
+    end
+  end
+
+  describe "user prompt" do
+    it "should be made during call to self.development to get the name of the development branch" do
+      expect(Config).to receive(:development_branch_name)
+      Branch.development
+    end
+
+    it "should be made during call to self.development to get the name of the development branch" do
+      expect(Config).to receive(:master_branch_name)
+      Branch.master
+    end
+
+    it "should be made during call to #development? to decide if the current branch is the development branch" do
+      expect(Config).to receive(:development_branch_name).and_return "test"
+      branch = Branch.new "test"
+      expect(branch.development?).to eq true
+    end
+
+    it "should be made during call to #master? to decide if the current branch is the master branch" do
+      expect(Config).to receive(:master_branch_name).and_return "test"
+      branch = Branch.new "test"
+      expect(branch.master?).to eq true
+    end
+
+    it "should be made during call to #protected? to decide if the current branch is either master or development" do
+      expect(Config).to receive(:development_branch_name).twice.and_return "test-dev"
+      expect(Config).to receive(:master_branch_name).twice.and_return "test-master"
+      branch = Branch.new "test-dev"
+      expect(branch.protected?).to eq true
+      branch = Branch.new "test-master"
+      expect(branch.protected?).to eq true
+    end
+
+    it "should be made during call to #feature? to decide if the current branch is either master or development" do
+      expect(Config).to receive(:development_branch_name).twice.and_return "test-dev"
+      expect(Config).to receive(:master_branch_name).twice.and_return "test-master"
+      branch = Branch.new "test-dev"
+      expect(branch.feature?).to eq false
+      branch = Branch.new "test-master"
+      expect(branch.feature?).to eq false
+    end
+
+    it "should be made during call to #delete! to decide if the current branch is protected" do
+      expect(Config).to receive(:development_branch_name).and_return "test-dev"
+      expect(Config).to receive(:master_branch_name).and_return "test-master"
+
+      allow(System).to receive(:call)
+      branch = Branch.new "test"
+      branch.delete!
+    end
+
+    it "should be made during call to #mark_prs_as_ready to determine the label marking the PR as ready" do
+      expect(Config).to receive(:ready_label).and_return "test-ready"
+
+      branch = Branch.new "test"
+      allow(branch).to receive(:label_prs)
+      branch.mark_prs_as_ready
     end
   end
 end

@@ -49,11 +49,11 @@ module Code
     end
 
     def self.development
-      new Config.get_development_branch_name
+      new Config.development_branch_name
     end
 
     def self.master
-      new Config.get_master_branch_name
+      new Config.master_branch_name
     end
 
     def self.create(branch_name)
@@ -82,16 +82,16 @@ module Code
     end
 
     def development?
-      name == Config.get_development_branch_name
+      name == Config.development_branch_name
     end
 
     def master?
-      name == Config.get_master_branch_name
+      name == Config.master_branch_name
     end
 
     def protected?
-      master_branch_name = Config.get_master_branch_name
-      development_branch_name = Config.get_development_branch_name
+      master_branch_name = Config.master_branch_name
+      development_branch_name = Config.development_branch_name
       protected_branch_names = [ master_branch_name, development_branch_name ]
       protected_branch_names.include? name
     end
@@ -143,8 +143,8 @@ module Code
       !pull_request.nil?
     end
 
-    def mark_prs_as_awaiting_review
-      label_prs("awaiting review")
+    def mark_prs_as_ready
+      label_prs(Config.ready_label)
     end
 
     def mark_prs_as_hotfix
