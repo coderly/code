@@ -54,6 +54,11 @@ module Code
       end
     end
 
+    def bundle
+      System.call "bundle create #{default_bundle_path} --all"
+      default_bundle_path
+    end
+
     # NOT used anywhere at the moment. Did we loose track of a supported command?
     def commit(message)
       System.call 'add -A'
@@ -95,6 +100,12 @@ module Code
     end
 
     private
+
+    def default_bundle_path
+      parent_directory = File.expand_path('..', Dir.pwd)
+      file_name = System.current_directory_name + '.bundle'
+      File.join(parent_directory, file_name)
+    end
 
     def stash
       System.call('stash')

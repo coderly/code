@@ -27,11 +27,15 @@ module Code
       end
 
       def open_command
-        command = "open" if osx?
-        command = "xdg-open" if linux?
-
-        command
+        return "open" if osx?
+        return "xdg-open" if linux?
       end
+
+      def reveal_command
+        return "open -R" if osx?
+        return "xdg-open" if linux?
+      end
+
     end
   end
 end

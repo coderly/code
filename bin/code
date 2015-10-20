@@ -143,6 +143,14 @@ command :merged do |c|
   end
 end
 
+desc 'Bundles up the current repo'
+command :bundle do |c|
+  c.action do |global_options, options, args|
+    bundle_path = $git.bundle
+    Code::System.reveal(bundle_path)
+  end
+end
+
 pre do |global, command, options, args|
   $git = Code::Git.new
   $github_api = Code::GitHubAPI.new

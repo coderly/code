@@ -23,6 +23,10 @@ module Code
       input.strip
     end
 
+    def current_directory_name
+      File.basename(Dir.getwd)
+    end
+
     def error(message)
       abort red(message)
     end
@@ -33,7 +37,11 @@ module Code
 
     def open(item)
       command = OS.current.open_command
+      `#{command} #{item}`
+    end
 
+    def reveal(item)
+      command = OS.current.reveal_command
       `#{command} #{item}`
     end
 
