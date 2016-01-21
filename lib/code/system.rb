@@ -12,7 +12,7 @@ module Code
 
     def prompt(prompt_text)
       print prompt_text + ": "
-      input = gets
+      input = STDIN.gets
       input.strip
     end
 
