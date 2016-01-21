@@ -57,8 +57,7 @@ module Code
 
     def store_property_to_config(property, property_value, config)
       config.add(property, property_value)
-
-      file = File.open ".codeconfig", "w"
+      file = File.open '.codeconfig', 'w+'
       config.write file
       file.close
     end

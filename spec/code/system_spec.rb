@@ -4,15 +4,15 @@ module Code
   module System
     describe "#prompt" do
       it "should print the prompt, then ask for and return the input" do
-        expect(System).to receive(:print).with("Test: ").and_return("")
-        expect(System).to receive(:gets).and_return("test_user")
+        expect(STDOUT).to receive(:print).with("Test: ").and_return("")
+        expect(STDIN).to receive(:gets).and_return("test_user")
         input = System.prompt "Test"
         expect(input).to eq "test_user"
       end
 
       it "should strip special characters from the input" do
-        allow(System).to receive(:print).and_return("")
-        allow(System).to receive(:gets).and_return("test\n")
+        allow(STDOUT).to receive(:print).and_return("")
+        allow(STDIN).to receive(:gets).and_return("test\n")
 
         input = System.prompt ""
         expect(input).to eq "test"

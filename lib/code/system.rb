@@ -56,8 +56,16 @@ module Code
       not $?.success?
     end
 
+    def print(text)
+      STDOUT.print text
+    end
+
     def puts(text)
-      Kernel.puts text
+      STDOUT.puts text
+    end
+
+    def gets
+      STDIN.gets
     end
 
     def noecho_gets
