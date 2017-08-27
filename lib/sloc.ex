@@ -13,7 +13,7 @@ defmodule Sloc do
   end
 
   @path "../turtle/turtle-api/lib"
-  @whitelist ~w(.ex .exs .rb)
+  @whitelist ~w(.ex .exs .rb .js)
 
   def run do
     report = get_report(@path)
