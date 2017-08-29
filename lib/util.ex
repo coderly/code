@@ -1,17 +1,20 @@
 defmodule C.Util do
 
-  def cmd(command, args \\ []) do
-    case System.cmd(command, args, [into: IO.stream(:stdio, :line), stderr_to_stdout: true, parallelism: false]) do
-      {value, 0} -> {:ok, value}
-      {err, 1} -> {:error, err}
+  @editor "code"
+
+  def cmd(command, args) do
+    case Porcelain.exec(command, args, err: :out) do
+      %{status: 0, out: result} -> {:ok, String.trim(result)}
+      %{status: 1, out: err} -> {:error, err}
     end
   end
 
-  def cmd_value(command, args) do
-    case System.cmd(command, args, [stderr_to_stdout: true]) do
-      {value, 0} -> {:ok, String.trim(value)}
-      {err, 1} -> {:error, err}
-    end
+  def open_in_browser(url) do
+    cmd("open", [url])
   end
 
+  def open_in_editor(path) do
+    cmd(@editor, [path])
+  end
+  
 end

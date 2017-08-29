@@ -15,3 +15,5 @@ config :revolver,
     "application/json" => Poison,
     "application/vnd.github.v3+json" => Poison
   }
+
+config :porcelain, driver: Porcelain.Driver.Basic

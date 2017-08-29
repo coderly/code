@@ -19,7 +19,8 @@ defmodule C.Mixfile do
     [
       {:revolver, github: "scrogson/revolver", ref: "master"},
       {:hackney, "1.6.1"},
-      {:poison, "~> 3.0"}
+      {:poison, "~> 3.0"},
+      {:porcelain, "~> 2.0"}
     ]
   end
 

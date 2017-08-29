@@ -1,5 +1,5 @@
 defmodule C.Git do
-  import C.Util, only: [cmd_value: 2]
+  import C.Util, only: [cmd: 2, open_in_editor: 1]
 
   defmodule Commit do
     defstruct [:hash, :subject, :body,
@@ -11,16 +11,25 @@ defmodule C.Git do
   end
 
   def current_branch() do
-    {:ok, "refs/heads/" <> branch_name} = cmd_value("git", ["symbolic-ref", "HEAD"])
+    {:ok, "refs/heads/" <> branch_name} = cmd("git", ["symbolic-ref", "HEAD"])
     branch_name
   end
 
-  # @grep_opts ~w(--break --heading --line-number --ignore-case --color=always --all-match)
+  def show_in_editor(commit_with_file_path) do
+    [commit, file_path] = String.split(commit_with_file_path, ":", parts: 2)
+    tmp_dir = System.tmp_dir()
+    file_name = Path.basename(file_path)
+    tmp_file_path = Path.join(tmp_dir, file_name)
+    Porcelain.exec("git", ["show", commit_with_file_path], out: {:path, tmp_file_path})
+    open_in_editor(tmp_file_path)
+    {:ok, tmp_file_path}
+  end
+
   @grep_opts ~w(--ignore-case --all-match --heading --break --line-number)
   def search_history(keywords) do
     with {:ok, commits} <- list_commits(),
           commit_hashes <- Enum.map(commits, &Map.get(&1, :hash)),
-          {:ok, raw} <- cmd_value("git", ["grep"] ++ @grep_opts ++ match_patterns(keywords) ++ commit_hashes),
+          {:ok, raw} <- cmd("git", ["grep"] ++ @grep_opts ++ match_patterns(keywords) ++ commit_hashes),
           entries <- parse_search_history(raw, commits),
           do: filter_to_latest(entries)
   end
@@ -51,7 +60,7 @@ defmodule C.Git do
     fields = [:hash, :author_date, :author_name, :subject]
     format = rev_parse_format(fields)
     filter = ["head"]
-    with {:ok, commit_string} <- cmd_value("git", ["rev-list"] ++ filter ++ ["--format=#{format}"]),
+    with {:ok, commit_string} <- cmd("git", ["rev-list"] ++ filter ++ ["--format=#{format}"]),
       do: {:ok, parse_commits(commit_string, fields)}
   end
 
@@ -108,19 +117,19 @@ defmodule C.Git do
          [org, repo] <- git_path |> String.replace(~r/\.git$/, "") |> String.split("/") do
       {:ok, {org, repo}}
     else
-      _ -> {:error}
+      _ -> {:error, "failed to find org and repo for github project"}
     end
   end
 
   def git_url(remote_name) do
-    with {:ok, url} <- cmd_value("git", ["ls-remote", "--get-url", remote_name]), do: url
+    with {:ok, url} <- cmd("git", ["ls-remote", "--get-url", remote_name]), do: url
   end
 
   def set_config(key, value) do
-    cmd_value("git", ["config", "--global", key, value])
+    cmd("git", ["config", "--global", key, value])
   end
   def get_config(key) do
-    cmd_value("git", ["config", "--get", key])
+    cmd("git", ["config", "--get", key])
   end
 
   def match_patterns(keywords) do
