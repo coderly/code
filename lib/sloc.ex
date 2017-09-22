@@ -12,12 +12,18 @@ defmodule Sloc do
     end
   end
 
-  @path "../turtle/turtle-api/lib"
+  @path "/Users/venkat/Code/archive/turtle-api"
   @whitelist ~w(.ex .exs .rb .js)
 
   def run do
-    report = get_report(@path)
-    IO.puts(format_report(report))
+    C.Git.checkout("master", @path)
+    {:ok, commits} = C.Git.list_commits(@path) |> IO.inspect()
+    for c <- commits, into: [] do
+      C.Git.checkout(c, @path)
+      report = get_report(@path <> "/lib")
+      line_count = report.line_count
+      {c.author_date, line_count}
+    end
   end
 
   def format_report(node), do: format_report(node, 0)

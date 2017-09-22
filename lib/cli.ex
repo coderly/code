@@ -20,6 +20,11 @@ defmodule C.CLI do
     report = Sloc.get_report(get_path(args))
     IO.puts(Sloc.format_report(report))
   end
+  def execute("files", patterns) do
+    pattern = Enum.join([""] ++ patterns ++ [""], "*")
+    {:ok, matches} = C.Util.cmd("find", [".", "-type", "f", "-path", pattern])
+    IO.puts(matches)
+  end
   def execute("req", _) do
     C.GitHub.API.list!()
   end
@@ -27,9 +32,13 @@ defmodule C.CLI do
     %{"html_url" => url} = C.Git.get_current_matching_pr()
     C.Util.open_in_browser(url)
   end
-  def execute("branch", _) do
-    args = ~w{for-each-ref --sort=committerdate refs/heads/ --format='%(HEAD) %(color:yellow)%(refname:short)%(color:reset) - %(color:red)%(objectname:short)%(color:reset) - %(contents:subject) - %(authorname) (%(color:green)%(committerdate:relative)%(color:reset))'}
-    cmd("git", ["status"])
+  def execute("gh", ["search", language | keywords]) do
+    params = %{
+      "type" => "Code",
+      "l" => language
+    }
+    search_uri = C.ExURI.merge_query_params("https://github.com/search", params) <> "&q=" <> Enum.join(keywords, "+")
+    C.Util.open_in_browser(search_uri)
   end
   def execute("pwd", _), do: cmd("pwd", [])
 

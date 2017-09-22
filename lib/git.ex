@@ -1,5 +1,5 @@
 defmodule C.Git do
-  import C.Util, only: [cmd: 2, open_in_editor: 1]
+  import C.Util, only: [cmd: 2, cmd: 3, open_in_editor: 1]
 
   defmodule Commit do
     defstruct [:hash, :subject, :body,
@@ -8,6 +8,16 @@ defmodule C.Git do
   end
   defmodule GrepEntry do
     defstruct [:commit, :file, :matches]
+  end
+
+  def checkout(%{hash: hash}, dir), do: checkout(hash, dir)
+  def checkout(commit_hash, dir) when is_binary(commit_hash) do
+    Porcelain.exec("git", ["checkout", commit_hash], dir: dir)
+  end
+
+  def reduce_over_commits(dir, reducer) do
+    {:ok, commits} = list_commits(dir)
+    Enum.reduce(commits, reducer)
   end
 
   def current_branch() do
@@ -56,11 +66,12 @@ defmodule C.Git do
                    committer_email: "%ce", committer_name: "%cn"}
   @delimiter "$$;;"
 
-  def list_commits() do
+  def list_commits(), do: list_commits(File.cwd())
+  def list_commits(dir) do
     fields = [:hash, :author_date, :author_name, :subject]
     format = rev_parse_format(fields)
     filter = ["head"]
-    with {:ok, commit_string} <- cmd("git", ["rev-list"] ++ filter ++ ["--format=#{format}"]),
+    with {:ok, commit_string} <- cmd("git", ["rev-list"] ++ filter ++ ["--format=#{format}"], [dir: dir]),
       do: {:ok, parse_commits(commit_string, fields)}
   end
 
