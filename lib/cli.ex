@@ -32,6 +32,11 @@ defmodule C.CLI do
     %{"html_url" => url} = C.Git.get_current_matching_pr()
     C.Util.open_in_browser(url)
   end
+  def execute("gh", []) do
+    {:ok, {org, repo}} = C.Git.github_org_and_repo()
+    uri = "https://github.com/#{org}/#{repo}"
+    C.Util.open_in_browser(uri)
+  end
   def execute("gh", ["search", language | keywords]) do
     params = %{
       "type" => "Code",

@@ -66,7 +66,10 @@ defmodule C.Git do
                    committer_email: "%ce", committer_name: "%cn"}
   @delimiter "$$;;"
 
-  def list_commits(), do: list_commits(File.cwd())
+  def list_commits() do
+    {:ok, cwd} = File.cwd()
+    list_commits(cwd)
+  end
   def list_commits(dir) do
     fields = [:hash, :author_date, :author_name, :subject]
     format = rev_parse_format(fields)
