@@ -1,5 +1,5 @@
 defmodule C.ExURI do
-  
+
   def merge_query_params(%URI{query: nil}=uri, query_params) do
     uri = %{uri | query: ""}
     merge_query_params(uri, query_params)
@@ -29,6 +29,5 @@ defmodule C.ExURI do
 
   defp merge_resolve(_k, v1, nil), do: v1
   defp merge_resolve(_k, _v1, v2), do: v2
-  
-  end
-  
+
+end

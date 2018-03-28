@@ -1,5 +1,5 @@
 defmodule C.Git do
-  import C.Util, only: [cmd: 2, cmd: 3, open_in_editor: 1]
+  import C.Util, only: [cmd: 2, cmd: 3, result: 2, result: 3, open_in_editor: 1]
 
   defmodule Commit do
     defstruct [:hash, :subject, :body,
@@ -25,8 +25,18 @@ defmodule C.Git do
     branch_name
   end
 
+  def branch_names() do
+    with {:ok, lines} <- result("git", ~w{for-each-ref --shell --format='%(refname)' refs/heads/}),
+         do: {:ok, String.split(lines, "\n") |> Enum.map(&clean_branch_name/1)}
+  end
+  def clean_branch_name(branch_name) do
+    branch_name
+    |> String.replace_prefix("''refs/heads/", "")
+    |> String.replace_suffix("''", "")
+  end
+
   def show_in_editor(commit_with_file_path) do
-    [commit, file_path] = String.split(commit_with_file_path, ":", parts: 2)
+    [_commit, file_path] = String.split(commit_with_file_path, ":", parts: 2)
     tmp_dir = System.tmp_dir()
     file_name = Path.basename(file_path)
     tmp_file_path = Path.join(tmp_dir, file_name)
@@ -39,7 +49,7 @@ defmodule C.Git do
   def search_history(keywords) do
     with {:ok, commits} <- list_commits(),
           commit_hashes <- Enum.map(commits, &Map.get(&1, :hash)),
-          {:ok, raw} <- cmd("git", ["grep"] ++ @grep_opts ++ match_patterns(keywords) ++ commit_hashes),
+          {:ok, raw} <- result("git", ["grep"] ++ @grep_opts ++ match_patterns(keywords) ++ commit_hashes),
           entries <- parse_search_history(raw, commits),
           do: filter_to_latest(entries)
   end
@@ -74,7 +84,7 @@ defmodule C.Git do
     fields = [:hash, :author_date, :author_name, :subject]
     format = rev_parse_format(fields)
     filter = ["head"]
-    with {:ok, commit_string} <- cmd("git", ["rev-list"] ++ filter ++ ["--format=#{format}"], [dir: dir]),
+    with {:ok, commit_string} <- result("git", ["rev-list"] ++ filter ++ ["--format=#{format}"], [dir: dir]),
       do: {:ok, parse_commits(commit_string, fields)}
   end
 
@@ -136,18 +146,18 @@ defmodule C.Git do
   end
 
   def git_url(remote_name) do
-    with {:ok, url} <- cmd("git", ["ls-remote", "--get-url", remote_name]), do: url
+    with {:ok, url} <- result("git", ["ls-remote", "--get-url", remote_name]), do: url
   end
 
   def set_config(key, value) do
     cmd("git", ["config", "--global", key, value])
   end
   def get_config(key) do
-    cmd("git", ["config", "--get", key])
+    result("git", ["config", "--get", key])
   end
 
   def match_patterns(keywords) do
     Enum.flat_map(keywords, fn k -> ["-e", k] end)
   end
-  
+
 end

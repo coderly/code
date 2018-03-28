@@ -4,6 +4,15 @@ defmodule C.Util do
   @browser "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
   def cmd(command, args, opts \\ []) do
+    opts = opts ++ [err: :out, out: IO.binstream(:standard_io, :line)]
+    IO.puts(Enum.join([command | args], " "))
+    case Porcelain.exec(command, args, opts) do
+      %{status: 1} -> exit(:shutdown)
+      result -> result
+    end
+  end
+
+  def result(command, args, opts \\ []) do
     opts = opts ++ [err: :out]
     case Porcelain.exec(command, args, opts) do
       %{status: 0, out: result} -> {:ok, String.trim(result)}

@@ -1,5 +1,5 @@
 defmodule C.CLI do
-  import C.Util, only: [cmd: 2]
+  alias C.Git.Repo, as: Repo
 
   def main(args) do
     {_opts, args, _} = OptionParser.parse(args)
@@ -8,6 +8,21 @@ defmodule C.CLI do
     execute(cmd, rest_args)
   end
 
+  def master_branch(), do: "master"
+  def origin, do: "origin"
+
+  def repo(), do: Repo.new(dir: File.cwd!(), master_branch: master_branch())
+
+  def execute("start", branch_name_parts) do
+    branch_name = Enum.join(branch_name_parts, "-")
+    Repo.ensure_changes_committed!(repo())
+    Repo.pull(repo(), origin(), master_branch())
+    Repo.create_branch(repo(), branch_name, master_branch())
+  end
+  def execute("branches", _) do
+    {:ok, branches} = C.Git.branch_names()
+    IO.inspect(branches)
+  end
   def execute("look", keywords) do
     C.Git.search_history(keywords)
     |> format_look()
@@ -22,7 +37,7 @@ defmodule C.CLI do
   end
   def execute("files", patterns) do
     pattern = Enum.join([""] ++ patterns ++ [""], "*")
-    {:ok, matches} = C.Util.cmd("find", [".", "-type", "f", "-path", pattern])
+    {:ok, matches} = C.Util.result("find", [".", "-type", "f", "-path", pattern])
     IO.puts(matches)
   end
   def execute("req", _) do
@@ -45,7 +60,9 @@ defmodule C.CLI do
     search_uri = C.ExURI.merge_query_params("https://github.com/search", params) <> "&q=" <> Enum.join(keywords, "+")
     C.Util.open_in_browser(search_uri)
   end
-  def execute("pwd", _), do: cmd("pwd", [])
+  def execute(name, _) do
+    raise "Unknown recognized command #{name}"
+  end
 
   def get_path([]), do: File.cwd!()
   def get_path([path]), do: path
