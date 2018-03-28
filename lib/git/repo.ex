@@ -1,7 +1,7 @@
 defmodule C.Git.Repo do
   defstruct [:dir, master_branch: "master"]
   alias C.Git.Repo, as: R
-  import C.Util, only: [cmd: 2, cmd: 3, result: 2, result: 3, open_in_editor: 1]
+  import C.Util, only: [cmd: 2, cmd: 3, result: 2, result: 3]
 
   def new(opts), do: struct(R, opts)
 
@@ -9,11 +9,20 @@ defmodule C.Git.Repo do
     cmd("git", ["pull", origin_name, "#{branch_name}:#{branch_name}"], dir: dir)
   end
 
+  def current_branch(%R{dir: dir}) do
+    {:ok, "refs/heads/" <> branch_name} = result("git", ["symbolic-ref", "HEAD"], dir: dir)
+    branch_name
+  end
+
   def create_branch(%R{dir: dir}, branch_name, source) do
     cmd("git", ["checkout", "-b", branch_name, source], dir: dir)
   end
   def checkout_branch(%R{dir: dir}, branch_name) when is_binary(branch_name) do
     cmd("git", ["checkout", branch_name], dir: dir)
+  end
+
+  def delete_branch(%R{dir: dir}, branch_name) do
+    cmd("git", ["branch", "-d", branch_name])
   end
 
   def ensure_changes_committed!(repo) do

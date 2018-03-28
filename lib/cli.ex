@@ -19,6 +19,12 @@ defmodule C.CLI do
     Repo.pull(repo(), origin(), master_branch())
     Repo.create_branch(repo(), branch_name, master_branch())
   end
+  def execute("cancel", _) do
+    branch_to_delete = Repo.current_branch(repo())
+    Repo.ensure_changes_committed!(repo())
+    Repo.checkout_branch(repo(), master_branch())
+    Repo.delete_branch(repo(), branch_to_delete)
+  end
   def execute("branches", _) do
     {:ok, branches} = C.Git.branch_names()
     IO.inspect(branches)

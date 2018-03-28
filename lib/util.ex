@@ -5,7 +5,7 @@ defmodule C.Util do
 
   def cmd(command, args, opts \\ []) do
     opts = opts ++ [err: :out, out: IO.binstream(:standard_io, :line)]
-    IO.puts(Enum.join([command | args], " "))
+    IO.puts(IO.ANSI.green() <> Enum.join([command | args], " ") <> IO.ANSI.reset())
     case Porcelain.exec(command, args, opts) do
       %{status: 1} -> exit(:shutdown)
       result -> result
