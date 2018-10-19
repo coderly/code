@@ -12,7 +12,11 @@ defmodule C.Git do
 
   def checkout(%{hash: hash}, dir), do: checkout(hash, dir)
   def checkout(commit_hash, dir) when is_binary(commit_hash) do
-    Porcelain.exec("git", ["checkout", commit_hash], dir: dir)
+    cmd("git", ["checkout", commit_hash], dir: dir)
+  end
+
+  def push(origin, branch) do
+    cmd("git", ["push", origin, branch <> ":" <> branch])
   end
 
   def reduce_over_commits(dir, reducer) do
@@ -21,7 +25,7 @@ defmodule C.Git do
   end
 
   def current_branch() do
-    {:ok, "refs/heads/" <> branch_name} = cmd("git", ["symbolic-ref", "HEAD"])
+    {:ok, "refs/heads/" <> branch_name} = result("git", ["symbolic-ref", "HEAD"])
     branch_name
   end
 
@@ -128,12 +132,16 @@ defmodule C.Git do
 
   def get_current_matching_pr() do
     with {:ok, {org, repo}} <- github_org_and_repo(),
-         branch <- current_branch(), do: get_matching_pull_request(org, repo, "master", branch)
+         branch <- current_branch(),
+         do: get_matching_pull_request(org, repo, "master", branch)
   end
 
   def get_matching_pull_request(org, repo, base, branch) do
     resp = C.GitHub.API.get_pull_requests(org: org, repo: repo, head: "#{org}:#{branch}", base: base)
-    with %{resp_body: [pr]} <- resp, do: pr
+    case resp.resp_body do
+      [pr] -> pr
+      _ -> nil
+    end
   end
 
   def github_org_and_repo() do

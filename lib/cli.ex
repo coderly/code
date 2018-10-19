@@ -16,6 +16,8 @@ defmodule C.CLI do
   def execute("start", branch_name_parts) do
     branch_name = Enum.join(branch_name_parts, "-")
     Repo.ensure_changes_committed!(repo())
+
+    Repo.checkout(repo(), master_branch())
     Repo.pull(repo(), origin(), master_branch())
     Repo.create_branch(repo(), branch_name, master_branch())
   end
@@ -50,8 +52,22 @@ defmodule C.CLI do
     C.GitHub.API.list!()
   end
   def execute("pr", _) do
-    %{"html_url" => url} = C.Git.get_current_matching_pr()
-    C.Util.open_in_browser(url)
+    # C.GitHub.API.authorize!()
+    current_branch = C.Git.current_branch()
+    {:ok, {org, repo}} = C.Git.github_org_and_repo()
+    C.Git.push("origin", current_branch)
+    case C.Git.get_current_matching_pr() do
+      %{"html_url" => url} ->
+        C.Util.open_in_browser(url)
+      nil ->
+        C.GitHub.API.create_pull_request(%{
+          org: org,
+          repo: repo,
+          base: master_branch(),
+          head: current_branch}) |> IO.inspect(label: :wtf)
+        %{"html_url" => url} = C.Git.get_current_matching_pr()
+        C.Util.open_in_browser(url)
+    end
   end
   def execute("gh", []) do
     {:ok, {org, repo}} = C.Git.github_org_and_repo()

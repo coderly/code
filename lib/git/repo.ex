@@ -1,7 +1,7 @@
 defmodule C.Git.Repo do
   defstruct [:dir, master_branch: "master"]
   alias C.Git.Repo, as: R
-  import C.Util, only: [cmd: 2, cmd: 3, result: 2, result: 3]
+  import C.Util, only: [cmd: 3, result: 3]
 
   def new(opts), do: struct(R, opts)
 
@@ -22,7 +22,7 @@ defmodule C.Git.Repo do
   end
 
   def delete_branch(%R{dir: dir}, branch_name) do
-    cmd("git", ["branch", "-d", branch_name])
+    cmd("git", ["branch", "-d", branch_name], dir: dir)
   end
 
   def ensure_changes_committed!(repo) do

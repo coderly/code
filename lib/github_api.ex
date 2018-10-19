@@ -15,7 +15,7 @@ defmodule C.GitHub.API do
 
   def authorize! do
     auth = get_username_password()
-    response = authorize_req(auth) |> post!("/authorizations")
+    authorize_req(auth) |> post!("/authorizations")
 
     otp = IO.gets("Please specify two-factor auth code: ") |> String.trim()
 
@@ -71,7 +71,6 @@ defmodule C.GitHub.API do
   end
 
   def get_username_password() do
-    # {"venkatd", "9gbAQFPhFhQqp2"}
     username = IO.gets("username: ")
     password = IO.gets("password: ")
     {String.trim(username), String.trim(password)}
