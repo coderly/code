@@ -1,5 +1,5 @@
 defmodule C.Git.Repo do
-  defstruct [:dir, master_branch: "master"]
+  defstruct [:dir, master_branch: "master", protected_branches: []]
   alias C.Git.Repo, as: R
   import C.Util, only: [cmd: 3, result: 3]
 
@@ -23,6 +23,29 @@ defmodule C.Git.Repo do
 
   def delete_branch(%R{dir: dir}, branch_name) do
     cmd("git", ["branch", "-d", branch_name], dir: dir)
+  end
+
+  def branches(%R{dir: dir}) do
+    with {:ok, lines} <- result("git", ["for-each-ref", "--shell", "--format='%(refname)'", "refs/heads/"], dir: dir),
+         do: {:ok, parse_branch_list(lines)}
+  end
+  def merged_branches(%R{dir: dir, protected_branches: protected_branches}, base_branch) do
+    with {:ok, lines} <- result("git", ["for-each-ref", "--shell", "--merged", base_branch, "--format='%(refname)'", "refs/heads/"], dir: dir) do
+      branches = parse_branch_list(lines)
+      List.delete(branches, base_branch) -- protected_branches
+    end
+  end
+
+  defp parse_branch_list(text) do
+    text
+    |> String.trim()
+    |> String.split("\n")
+    |> Enum.map(&clean_branch_name/1)
+  end
+  defp clean_branch_name(branch_name) do
+    branch_name
+    |> String.replace_prefix("''refs/heads/", "")
+    |> String.replace_suffix("''", "")
   end
 
   def ensure_changes_committed!(repo) do

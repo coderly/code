@@ -41,10 +41,10 @@ defmodule C.GitHub.API do
     opts = Enum.into(opts, %{})
     do_create_pull_request(opts)
   end
-  def do_create_pull_request(%{org: org, repo: repo, base: base, head: head}) do
+  def do_create_pull_request(%{title: title, org: org, repo: repo, base: base, head: head}) do
     params = %{
-      "title" => "Amazing new feature",
-      "body" => "Please pull this in!",
+      "title" => title,
+      "body" => "",
       "head" => head,
       "base" => base
     }

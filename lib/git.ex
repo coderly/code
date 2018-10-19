@@ -1,4 +1,6 @@
 defmodule C.Git do
+  alias C.Git.Repo, as: R
+
   import C.Util, only: [cmd: 2, cmd: 3, result: 2, result: 3, open_in_editor: 1]
 
   defmodule Commit do
@@ -22,21 +24,6 @@ defmodule C.Git do
   def reduce_over_commits(dir, reducer) do
     {:ok, commits} = list_commits(dir)
     Enum.reduce(commits, reducer)
-  end
-
-  def current_branch() do
-    {:ok, "refs/heads/" <> branch_name} = result("git", ["symbolic-ref", "HEAD"])
-    branch_name
-  end
-
-  def branch_names() do
-    with {:ok, lines} <- result("git", ~w{for-each-ref --shell --format='%(refname)' refs/heads/}),
-         do: {:ok, String.split(lines, "\n") |> Enum.map(&clean_branch_name/1)}
-  end
-  def clean_branch_name(branch_name) do
-    branch_name
-    |> String.replace_prefix("''refs/heads/", "")
-    |> String.replace_suffix("''", "")
   end
 
   def show_in_editor(commit_with_file_path) do
@@ -124,16 +111,16 @@ defmodule C.Git do
     |> Enum.join(@delimiter)
   end
 
-  def create_pull_request do
-    {:ok, {org, repo}} = github_org_and_repo()
-    branch = current_branch()
-    C.GitHub.API.get_pull_requests(org: org, repo: repo, head: branch, base: "master")
+  def create_pull_request(repo) do
+    {:ok, {org, repo_name}} = github_org_and_repo()
+    branch = R.current_branch(repo)
+    C.GitHub.API.get_pull_requests(org: org, repo: repo_name, head: branch, base: "master")
   end
 
-  def get_current_matching_pr() do
-    with {:ok, {org, repo}} <- github_org_and_repo(),
-         branch <- current_branch(),
-         do: get_matching_pull_request(org, repo, "master", branch)
+  def get_current_matching_pr(repo) do
+    with {:ok, {org, repo_name}} <- github_org_and_repo(),
+         branch <- R.current_branch(repo),
+         do: get_matching_pull_request(org, repo_name, "master", branch)
   end
 
   def get_matching_pull_request(org, repo, base, branch) do

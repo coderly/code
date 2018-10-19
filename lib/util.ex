@@ -3,6 +3,12 @@ defmodule C.Util do
   @editor "code"
   @browser "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
+  def humanize(branch_name) do
+    branch_name
+    |> String.replace("-", " ")
+    |> String.capitalize()
+  end
+
   def cmd(command, args, opts \\ []) do
     opts = opts ++ [err: :out, out: IO.binstream(:standard_io, :line)]
     IO.puts(IO.ANSI.green() <> Enum.join([command | args], " ") <> IO.ANSI.reset())

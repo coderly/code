@@ -2,16 +2,22 @@ defmodule C.CLI do
   alias C.Git.Repo, as: Repo
 
   def main(args) do
-    {_opts, args, _} = OptionParser.parse(args)
+    {_opts, args, _} = OptionParser.parse(args, allow_nonexistent_atoms: true)
 
     [cmd | rest_args] = args
     execute(cmd, rest_args)
   end
 
-  def master_branch(), do: "master"
+  def master_branch, do: "master"
   def origin, do: "origin"
 
-  def repo(), do: Repo.new(dir: File.cwd!(), master_branch: master_branch())
+  def repo do
+    Repo.new(
+      dir: System.get_env("DIR") || File.cwd(),
+      master_branch: master_branch(),
+      protected_branches: ["master", "development"]
+    )
+  end
 
   def execute("start", branch_name_parts) do
     branch_name = Enum.join(branch_name_parts, "-")
@@ -28,8 +34,17 @@ defmodule C.CLI do
     Repo.delete_branch(repo(), branch_to_delete)
   end
   def execute("branches", _) do
-    {:ok, branches} = C.Git.branch_names()
+    {:ok, branches} = Repo.branches(repo())
     IO.inspect(branches)
+  end
+  def execute("clean", _) do
+    merged_branches = Repo.merged_branches(repo(), master_branch())
+    IO.puts("These branches have already been merged:")
+    IO.puts(Enum.join(merged_branches, " "))
+    IO.puts("Deleting them...")
+    Enum.each(merged_branches, fn branch ->
+      Repo.delete_branch(repo(), branch)
+    end)
   end
   def execute("look", keywords) do
     C.Git.search_history(keywords)
@@ -53,10 +68,10 @@ defmodule C.CLI do
   end
   def execute("pr", _) do
     # C.GitHub.API.authorize!()
-    current_branch = C.Git.current_branch()
+    current_branch = Repo.current_branch(repo())
     {:ok, {org, repo}} = C.Git.github_org_and_repo()
     C.Git.push("origin", current_branch)
-    case C.Git.get_current_matching_pr() do
+    case C.Git.get_current_matching_pr(repo()) do
       %{"html_url" => url} ->
         C.Util.open_in_browser(url)
       nil ->
@@ -64,8 +79,9 @@ defmodule C.CLI do
           org: org,
           repo: repo,
           base: master_branch(),
-          head: current_branch}) |> IO.inspect(label: :wtf)
-        %{"html_url" => url} = C.Git.get_current_matching_pr()
+          title: C.Util.humanize(current_branch),
+          head: current_branch})
+        %{"html_url" => url} = C.Git.get_current_matching_pr(repo())
         C.Util.open_in_browser(url)
     end
   end
