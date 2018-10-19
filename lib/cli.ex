@@ -13,7 +13,7 @@ defmodule C.CLI do
 
   def repo do
     Repo.new(
-      dir: System.get_env("DIR") || File.cwd(),
+      dir: System.get_env("DIR") || File.cwd!(),
       master_branch: master_branch(),
       protected_branches: ["master", "development"]
     )
